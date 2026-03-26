@@ -132,7 +132,18 @@ def analyze_audio(file_bytes: bytes, filename: str) -> dict:
 def _analyze_tonality(y: np.ndarray, sr: int) -> dict:
     y_harm = librosa.effects.harmonic(y)
     chroma = librosa.feature.chroma_cqt(y=y_harm, sr=sr)
-    hist = chroma.mean(axis=1)
+    # For each frame, count only the top 3 pitch classes (reflecting real chord tones).
+    # Averaging raw energy always leaks into all 12 bins; this avoids that entirely.
+    n_top = 3
+    hist = np.zeros(12)
+    for t in range(chroma.shape[1]):
+        top = np.argsort(chroma[:, t])[-n_top:]
+        hist[top] += 1.0
+    if hist.sum() > 0:
+        hist = hist / hist.sum()
+    # Zero out pitch classes that appear in fewer than 15% of frames vs the peak
+    threshold = hist.max() * 0.15
+    hist[hist < threshold] = 0.0
     if hist.sum() > 0:
         hist = hist / hist.sum()
 
@@ -335,12 +346,19 @@ def _analyze_bass(y: np.ndarray, sr: int, tonic_pc: int) -> dict:
 
     C = np.abs(librosa.cqt(y, sr=sr, fmin=fmin, n_bins=n_bins, bins_per_octave=12))
 
+    # For each frame, count only the top 2 bass bins (one dominant bass note per frame)
     bass_pc = np.zeros(12)
-    for i in range(n_bins):
-        bass_pc[i % 12] += float(C[i].mean())
+    for t in range(C.shape[1]):
+        top = np.argsort(C[:, t])[-2:]
+        for idx in top:
+            bass_pc[idx % 12] += 1.0
 
     total = bass_pc.sum() + 1e-10
     norm  = bass_pc / total
+    threshold = norm.max() * 0.15
+    norm[norm < threshold] = 0.0
+    if norm.sum() > 0:
+        norm = norm / norm.sum()
 
     top3           = [NOTE_NAMES[i] for i in np.argsort(norm)[::-1][:3]]
     root_pct       = round(float(norm[tonic_pc]) * 100, 1)

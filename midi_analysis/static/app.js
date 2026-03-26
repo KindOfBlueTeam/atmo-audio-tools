@@ -766,9 +766,10 @@ class MIDIAnalysisApp {
             this._set('aResMode',       ton.mode      || 'N/A');
             this._set('aResModalFlavor',ton.modal_flavor || 'N/A');
             this._set('aResConfidence', ton.key_confidence != null ? `${ton.key_confidence}%` : 'N/A');
-            this._renderNoteChart('pitchHist', ton.pitch_class_histogram || {});
+            this._renderNoteLineChart('pitchHist', ton.pitch_class_histogram || {});
             document.getElementById('pitchHistContainer').style.display = 'block';
         }
+
 
         // BPM
         const bpm = r.bpm || {};
@@ -841,7 +842,7 @@ class MIDIAnalysisApp {
             this._set('aResRootBass',  bass.root_bass_pct    != null ? `${bass.root_bass_pct}%`     : 'N/A');
             this._set('aResNonRoot',   bass.non_root_bass_pct != null ? `${bass.non_root_bass_pct}%` : 'N/A');
             this._set('aResSub',       bass.sub_consistency  || 'N/A');
-            this._renderNoteChart('bassHist', bass.bass_note_distribution || {});
+            this._renderNoteLineChart('bassHist', bass.bass_note_distribution || {});
             document.getElementById('bassHistContainer').style.display = 'block';
         }
 
@@ -867,6 +868,9 @@ class MIDIAnalysisApp {
         // Raw JSON
         document.getElementById('audioRawJSON').textContent = JSON.stringify(r, null, 2);
 
+        // Radar charts — built last so all data sections are populated
+        this._buildRadarCharts(r);
+
         requestAnimationFrame(() => {
             this.elements.audioResultsSection.querySelector('.results-container').scrollIntoView({ behavior: 'smooth' });
         });
@@ -877,6 +881,63 @@ class MIDIAnalysisApp {
     _set(id, value) {
         const el = document.getElementById(id);
         if (el) el.textContent = value;
+    }
+
+    _renderNoteLineChart(containerId, histogram) {
+        const el = document.getElementById(containerId);
+        if (!el) return;
+
+        const notes  = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+        const values = notes.map(n => histogram[n] || 0);
+        const max    = Math.max(...values, 0.001);
+        const norm   = values.map(v => v / max);
+
+        const W = 600, H = 60;
+        const padL = 10, padR = 10, padT = 6, padB = 18;
+        const chartW = W - padL - padR;
+        const chartH = H - padT - padB;
+        const n = notes.length;
+        const stepX = chartW / (n - 1);
+
+        const xPos = i => padL + i * stepX;
+        const yPos = v => padT + chartH * (1 - v);
+
+        const bg = `<rect x="0" y="0" width="${W}" height="${H}" fill="#000" rx="4"/>`;
+
+        // Subtle grid lines at 50 / 100%
+        const grid = [0.5, 1.0].map(s => {
+            const y = yPos(s);
+            return `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}"
+                stroke="rgba(148,184,208,0.15)" stroke-width="0.5"/>`;
+        }).join('');
+
+        // Filled area under the line
+        const areaPoints = [
+            `${xPos(0)},${padT + chartH}`,
+            ...norm.map((v, i) => `${xPos(i)},${yPos(v)}`),
+            `${xPos(n-1)},${padT + chartH}`
+        ].join(' ');
+        const area = `<polygon points="${areaPoints}" fill="rgba(0,153,255,0.12)"/>`;
+
+        // Line
+        const linePts = norm.map((v, i) => `${xPos(i)},${yPos(v)}`).join(' ');
+        const line = `<polyline points="${linePts}" fill="none" stroke="#0099ff" stroke-width="0.8" stroke-linejoin="round" stroke-linecap="round"/>`;
+
+        // Dots + labels
+        const dots = norm.map((v, i) => {
+            const color = values[i] === 0 ? '#ef4444' : (v >= 0.7 ? '#10b981' : '#00ccff');
+            return `<circle cx="${xPos(i)}" cy="${yPos(v)}" r="2" fill="${color}"/>`;
+        }).join('');
+
+        const labels = notes.map((note, i) => {
+            const color = values[i] === 0 ? '#ef4444' : (norm[i] >= 0.7 ? '#10b981' : '#94b8d0');
+            return `<text x="${xPos(i)}" y="${H - 3}" text-anchor="middle"
+                font-family="'Josefin Slab',Georgia,serif" font-size="9" fill="${color}">${note}</text>`;
+        }).join('');
+
+        el.innerHTML = `<svg width="100%" viewBox="0 0 ${W} ${H}">
+            ${bg}${grid}${area}${line}${dots}${labels}
+        </svg>`;
     }
 
     _renderNoteChart(containerId, histogram) {
@@ -895,17 +956,55 @@ class MIDIAnalysisApp {
     }
 
     _renderBandChart(containerId, bands, suffix = '') {
+        const el = document.getElementById(containerId);
+        if (!el) return;
+
+        const labels = Object.keys(bands);
         const values = Object.values(bands).map(v => v || 0);
-        const max = Math.max(...values, 0.001);
-        const html = Object.entries(bands).map(([label, val]) => {
-            const pct = Math.round((val || 0) / max * 100);
-            return `<div class="vel-bar-row">
-                <span class="vel-label" style="min-width:90px;text-align:right;font-size:0.75em;">${label}</span>
-                <div class="vel-bar-bg"><div class="vel-bar-fill" style="width:${pct}%"></div></div>
-                <span class="vel-count">${val}${suffix}</span>
-            </div>`;
+        const max    = Math.max(...values, 0.001);
+        const norm   = values.map(v => v / max);
+
+        const W = 600, H = 60;
+        const padL = 10, padR = 10, padT = 6, padB = 18;
+        const chartW = W - padL - padR;
+        const chartH = H - padT - padB;
+        const n = labels.length;
+        const stepX = chartW / (n - 1);
+
+        const xPos = i => padL + i * stepX;
+        const yPos = v => padT + chartH * (1 - v);
+
+        const bg = `<rect x="0" y="0" width="${W}" height="${H}" fill="#000" rx="4"/>`;
+
+        const grid = [0.5, 1.0].map(s => {
+            const y = yPos(s);
+            return `<line x1="${padL}" y1="${y}" x2="${W - padR}" y2="${y}"
+                stroke="rgba(148,184,208,0.15)" stroke-width="0.5"/>`;
         }).join('');
-        document.getElementById(containerId).innerHTML = html;
+
+        const areaPoints = [
+            `${xPos(0)},${padT + chartH}`,
+            ...norm.map((v, i) => `${xPos(i)},${yPos(v)}`),
+            `${xPos(n-1)},${padT + chartH}`
+        ].join(' ');
+        const area = `<polygon points="${areaPoints}" fill="rgba(0,153,255,0.12)"/>`;
+
+        const linePts = norm.map((v, i) => `${xPos(i)},${yPos(v)}`).join(' ');
+        const line = `<polyline points="${linePts}" fill="none" stroke="#0099ff" stroke-width="0.8" stroke-linejoin="round" stroke-linecap="round"/>`;
+
+        const dots = norm.map((v, i) =>
+            `<circle cx="${xPos(i)}" cy="${yPos(v)}" r="2" fill="#00ccff"/>`
+        ).join('');
+
+        const lbls = labels.map((lbl, i) => {
+            const short = lbl.replace(/\s*\(.*/, '').replace('Hz','').trim();
+            return `<text x="${xPos(i)}" y="${H - 3}" text-anchor="middle"
+                font-family="'Josefin Slab',Georgia,serif" font-size="9" fill="#94b8d0">${short}</text>`;
+        }).join('');
+
+        el.innerHTML = `<svg width="100%" viewBox="0 0 ${W} ${H}">
+            ${bg}${grid}${area}${line}${dots}${lbls}
+        </svg>`;
     }
 
     _renderEnergyCurve(containerId, curve) {
@@ -928,10 +1027,95 @@ class MIDIAnalysisApp {
         document.getElementById(containerId).innerHTML = html;
     }
 
+    // ── Radar charts ─────────────────────────────────────────────────────────
+
+    _buildRadarCharts(r) {
+        const NOTE_LABELS = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+        const ton  = r.tonality  || {};
+        const freq = r.frequency || {};
+        const bass = r.bass      || {};
+
+        const pitchData = NOTE_LABELS.map(n => (ton.pitch_class_histogram  || {})[n] || 0);
+        const freqData  = [
+            freq.sub_20_60_pct    || 0,
+            freq.low_60_250_pct   || 0,
+            freq.mid_250_2k_pct   || 0,
+            freq.high_2k_10k_pct  || 0,
+            freq.air_10k_plus_pct || 0,
+        ];
+        const bassData = NOTE_LABELS.map(n => (bass.bass_note_distribution || {})[n] || 0);
+
+        const anyData = pitchData.some(v => v > 0) || freqData.some(v => v > 0) || bassData.some(v => v > 0);
+        if (!anyData) return;
+
+        const card = document.getElementById('audioRadarCard');
+        if (card) card.style.display = 'block';
+
+        this._renderRadarSVG('radarPitch', NOTE_LABELS, pitchData, true);
+        this._renderRadarSVG('radarFreq',  ['Sub', 'Low', 'Mid', 'High', 'Air'], freqData, false);
+        this._renderRadarSVG('radarBass',  NOTE_LABELS, bassData, true);
+    }
+
+    _renderRadarSVG(containerId, labels, data, colorizeLabels = false) {
+        const el = document.getElementById(containerId);
+        if (!el) return;
+
+        const size = 260;
+        const cx = size / 2, cy = size / 2;
+        const r  = size * 0.36;
+        const labelR = size * 0.47;
+        const n = labels.length;
+        const max = Math.max(...data, 0.001);
+        const norm = data.map(v => v / max);
+
+        const labelColor = colorizeLabels
+            ? data.map(v => v === 0 ? '#ef4444' : (v / max >= 0.7 ? '#10b981' : '#94b8d0'))
+            : data.map(() => '#94b8d0');
+
+        const angle = i => (Math.PI * 2 * i / n) - Math.PI / 2;
+        const px = (i, scale) => cx + Math.cos(angle(i)) * r * scale;
+        const py = (i, scale) => cy + Math.sin(angle(i)) * r * scale;
+
+        // Grid rings
+        const rings = [0.25, 0.5, 0.75, 1.0].map(s => {
+            const pts = Array.from({length: n}, (_, i) => `${px(i,s)},${py(i,s)}`).join(' ');
+            return `<polygon points="${pts}" fill="none" stroke="rgba(148,184,208,0.15)" stroke-width="1"/>`;
+        }).join('');
+
+        // Spokes
+        const spokes = Array.from({length: n}, (_, i) =>
+            `<line x1="${cx}" y1="${cy}" x2="${px(i,1)}" y2="${py(i,1)}" stroke="rgba(148,184,208,0.15)" stroke-width="1"/>`
+        ).join('');
+
+        // Data polygon
+        const dataPts = Array.from({length: n}, (_, i) => `${px(i, norm[i])},${py(i, norm[i])}`).join(' ');
+        const dataShape = `<polygon points="${dataPts}" fill="rgba(0,153,255,0.18)" stroke="#0099ff" stroke-width="2" stroke-linejoin="round"/>`;
+
+        // Data points
+        const dots = Array.from({length: n}, (_, i) =>
+            `<circle cx="${px(i, norm[i])}" cy="${py(i, norm[i])}" r="3" fill="#00ccff"/>`
+        ).join('');
+
+        // Labels
+        const txtLabels = labels.map((lbl, i) => {
+            const lx = cx + Math.cos(angle(i)) * labelR;
+            const ly = cy + Math.sin(angle(i)) * labelR;
+            return `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="middle"
+                font-family="'Josefin Slab',Georgia,serif" font-size="11" fill="${labelColor[i]}">${lbl}</text>`;
+        }).join('');
+
+        el.innerHTML = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+            ${rings}${spokes}${dataShape}${dots}${txtLabels}
+        </svg>`;
+    }
+
     // ── Audio reset / error ───────────────────────────────────────────────────
 
     resetAudio() {
         this.audioFile = null;
+        this._radarCharts = {};
+        const card = document.getElementById('audioRadarCard');
+        if (card) card.style.display = 'none';
         document.querySelector('#audioTab .upload-section').style.display = 'block';
         this.elements.audioResultsSection.style.display = 'none';
         this.hideAudioError();

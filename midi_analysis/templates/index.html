@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Atmo Audio Toolbox</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Josefin+Slab:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
@@ -13,7 +16,7 @@
                 <img src="{{ url_for('static', filename='img/atmo-records-logo-test.png') }}" alt="Atmo Records" class="header-logo">
                 <div>
                     <h1>Atmo Audio Toolbox</h1>
-                    <p class="subtitle">Upload and analyze your MIDI or audio files instantly</p>
+                    <p class="subtitle">Upload and analyze your audio or MIDI files instantly</p>
                 </div>
             </div>
         </header>
@@ -183,6 +186,25 @@
                 <section id="audioResultsSection" class="results-section" style="display:none;">
                     <div class="results-container">
 
+                        <!-- Radar Charts -->
+                        <div class="result-card" id="audioRadarCard" style="display:none;">
+                            <h3>📡 Visual Overview</h3>
+                            <div class="radar-row">
+                                <div class="radar-wrap">
+                                    <div class="radar-title">Pitch Class</div>
+                                    <div id="radarPitch"></div>
+                                </div>
+                                <div class="radar-wrap">
+                                    <div class="radar-title">Bass Notes</div>
+                                    <div id="radarBass"></div>
+                                </div>
+                                <div class="radar-wrap">
+                                    <div class="radar-title">Frequency Balance</div>
+                                    <div id="radarFreq"></div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- File Info -->
                         <div class="result-card">
                             <h3>📋 File Information</h3>
@@ -257,7 +279,7 @@
                             </div>
                             <div id="stereoWidthBar" style="display:none; margin-top:15px; padding:12px; background:rgba(255,255,255,0.05); border-radius:6px;">
                                 <div style="font-size:0.85em; margin-bottom:8px; color:#999;">Stereo Width</div>
-                                <div class="spectrum-bar"><div id="stereoWidthFill" class="spectrum-fill" style="background:linear-gradient(to right,#10b981,#6366f1);"></div></div>
+                                <div class="spectrum-bar"><div id="stereoWidthFill" class="spectrum-fill" style="background:linear-gradient(to right,#10b981,#0099ff);"></div></div>
                             </div>
                         </div>
 
