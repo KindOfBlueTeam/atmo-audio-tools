@@ -912,14 +912,14 @@ class MIDIAnalysisApp {
             // Read metrics from headers before consuming body
             const h = response.headers;
             const fmt = (v, unit) => v && v !== 'None' ? `${v} ${unit}` : '—';
-            document.getElementById('mBefore-lufs').textContent = fmt(h.get('X-Master-Before-lufs'), 'LUFS');
-            document.getElementById('mBefore-peak').textContent = fmt(h.get('X-Master-Before-peak_db'), 'dBFS');
-            document.getElementById('mBefore-rms').textContent  = fmt(h.get('X-Master-Before-rms_db'), 'dB');
-            document.getElementById('mBefore-dr').textContent   = fmt(h.get('X-Master-Before-dr'), 'dB');
-            document.getElementById('mAfter-lufs').textContent  = fmt(h.get('X-Master-After-lufs'), 'LUFS');
-            document.getElementById('mAfter-peak').textContent  = fmt(h.get('X-Master-After-peak_db'), 'dBFS');
-            document.getElementById('mAfter-rms').textContent   = fmt(h.get('X-Master-After-rms_db'), 'dB');
-            document.getElementById('mAfter-dr').textContent    = fmt(h.get('X-Master-After-dr'), 'dB');
+            document.getElementById('mBefore-lufs').textContent = fmt(h.get('X-Master-Before-Lufs'), 'LUFS');
+            document.getElementById('mBefore-peak').textContent = fmt(h.get('X-Master-Before-Peak'), 'dBFS');
+            document.getElementById('mBefore-rms').textContent  = fmt(h.get('X-Master-Before-Rms'), 'dB');
+            document.getElementById('mBefore-dr').textContent   = fmt(h.get('X-Master-Before-Dr'), 'dB');
+            document.getElementById('mAfter-lufs').textContent  = fmt(h.get('X-Master-After-Lufs'), 'LUFS');
+            document.getElementById('mAfter-peak').textContent  = fmt(h.get('X-Master-After-Peak'), 'dBFS');
+            document.getElementById('mAfter-rms').textContent   = fmt(h.get('X-Master-After-Rms'), 'dB');
+            document.getElementById('mAfter-dr').textContent    = fmt(h.get('X-Master-After-Dr'), 'dB');
 
             const blob = await response.blob();
             const url  = URL.createObjectURL(blob);

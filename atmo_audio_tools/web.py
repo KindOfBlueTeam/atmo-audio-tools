@@ -505,16 +505,14 @@ def create_app():
                 as_attachment=True,
                 download_name=download_name,
             )
-            for key, val in before.items():
-                resp.headers[f'X-Master-Before-{key}'] = str(val)
-            for key, val in after.items():
-                resp.headers[f'X-Master-After-{key}'] = str(val)
-            resp.headers['Access-Control-Expose-Headers'] = (
-                'X-Master-Before-lufs,X-Master-Before-peak_db,'
-                'X-Master-Before-rms_db,X-Master-Before-dr,'
-                'X-Master-After-lufs,X-Master-After-peak_db,'
-                'X-Master-After-rms_db,X-Master-After-dr'
-            )
+            resp.headers['X-Master-Before-Lufs']    = str(before['lufs'])
+            resp.headers['X-Master-Before-Peak']    = str(before['peak_db'])
+            resp.headers['X-Master-Before-Rms']     = str(before['rms_db'])
+            resp.headers['X-Master-Before-Dr']      = str(before['dr'])
+            resp.headers['X-Master-After-Lufs']     = str(after['lufs'])
+            resp.headers['X-Master-After-Peak']     = str(after['peak_db'])
+            resp.headers['X-Master-After-Rms']      = str(after['rms_db'])
+            resp.headers['X-Master-After-Dr']       = str(after['dr'])
             return resp
 
         except Exception as exc:
