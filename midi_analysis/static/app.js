@@ -762,12 +762,15 @@ class MIDIAnalysisApp {
         // Tonality
         const ton = r.tonality || {};
         if (!ton.error) {
-            this._set('aResKey',        ton.key       || 'N/A');
-            this._set('aResMode',       ton.mode      || 'N/A');
-            this._set('aResModalFlavor',ton.modal_flavor || 'N/A');
-            this._set('aResConfidence', ton.key_confidence != null ? `${ton.key_confidence}%` : 'N/A');
+            this._set('aResKey',              ton.key       || 'N/A');
+            this._set('aResMode',             ton.mode      || 'N/A');
+            this._set('aResModalFlavor',      ton.modal_flavor || 'N/A');
+            this._set('aResConfidence',       ton.key_confidence != null ? `${ton.key_confidence}%` : 'N/A');
+            this._set('aResTonicMargin',      ton.tonic_margin != null ? ton.tonic_margin.toFixed(3) : 'N/A');
+            this._set('aResRelativeKey',      ton.relative_key_candidate || 'N/A');
             this._renderNoteLineChart('pitchHist', ton.pitch_class_histogram || {});
             document.getElementById('pitchHistContainer').style.display = 'block';
+            this._renderCandidateTonics('candidateTonicsContainer', ton.candidate_tonics || {});
         }
 
 
@@ -777,7 +780,38 @@ class MIDIAnalysisApp {
             this._set('aResBPM',      bpm.tempo_bpm != null ? `${bpm.tempo_bpm} BPM` : 'N/A');
             this._set('aResBeats',    bpm.beat_count ?? 'N/A');
             this._set('aResStability',bpm.tempo_stability_label || 'N/A');
+            this._set('aResTempoConf',bpm.tempo_confidence != null ? `${(bpm.tempo_confidence * 100).toFixed(1)}%` : 'N/A');
             this._set('aResDownbeat', bpm.downbeat_confidence != null ? `${bpm.downbeat_confidence}×` : 'N/A');
+            this._set('aResAmbient',      bpm.is_ambient ? 'Ambient / Pad-heavy' : 'Standard');
+            this._set('aResAmbientScore', bpm.ambient_score != null
+                ? `${(bpm.ambient_score * 100).toFixed(1)}%` : 'N/A');
+            this._set('aResBeatGrid',     bpm.beat_grid_confidence != null
+                ? `${(bpm.beat_grid_confidence * 100).toFixed(1)}%` : 'N/A');
+
+            // Time scaling badges
+            const scaleFlags = [];
+            if (bpm.double_time_detected) scaleFlags.push('Double-time');
+            if (bpm.half_time_detected)   scaleFlags.push('Half-time');
+            if (bpm.tempo_normalization_applied) scaleFlags.push('Normalized');
+            this._set('aResTimeScale', scaleFlags.length ? scaleFlags.join(', ') : 'None');
+
+            // Top tempo candidates
+            const candOuter = document.getElementById('tempoCandidatesOuter');
+            if (bpm.tempo_candidates && bpm.tempo_candidates.length > 0) {
+                this._renderTempoCandidates('tempoCandidatesContainer', bpm.tempo_candidates);
+                if (candOuter) candOuter.style.display = '';
+            } else {
+                if (candOuter) candOuter.style.display = 'none';
+            }
+
+            // Tempo equivalence groups
+            const grpOuter = document.getElementById('tempoGroupsOuter');
+            if (bpm.tempo_groups && bpm.tempo_groups.length > 0) {
+                this._renderTempoGroups('tempoGroupsContainer', bpm.tempo_groups);
+                if (grpOuter) grpOuter.style.display = '';
+            } else {
+                if (grpOuter) grpOuter.style.display = 'none';
+            }
         }
 
         // Loudness
@@ -828,11 +862,26 @@ class MIDIAnalysisApp {
         // Harmonic
         const harm = r.harmonic || {};
         if (!harm.error) {
-            this._set('aResRoot',      harm.dominant_root || 'N/A');
-            this._set('aResRootStab',  harm.root_stability_pct != null ? `${harm.root_stability_pct}%` : 'N/A');
-            this._set('aResKeyDrift',  harm.key_drift ?? 'N/A');
-            this._set('aResVI',        harm.dominant_tonic_resolution_pct != null ? `${harm.dominant_tonic_resolution_pct}%` : 'N/A');
-            this._set('aResChords',    harm.chord_changes_per_min ?? 'N/A');
+            const rootLabel = harm.inferred_harmonic_root
+                + (harm.harmonic_root_diverges_from_tonic ? ' ⚠' : '');
+            this._set('aResRoot',         rootLabel || 'N/A');
+            this._set('aResBassRoot',     harm.dominant_bass_pitch_class || 'N/A');
+            this._set('aResRootStab',     harm.root_stability_pct != null ? `${harm.root_stability_pct}%` : 'N/A');
+            this._set('aResRootRank1',    harm.root_rank1_pct != null ? `${harm.root_rank1_pct}%` : 'N/A');
+            this._set('aResRootTop2',     harm.root_top2_pct != null ? `${harm.root_top2_pct}%` : 'N/A');
+            this._set('aResRootMeanRank', harm.root_mean_rank != null ? harm.root_mean_rank.toFixed(2) : 'N/A');
+            this._set('aResMarginMean',   harm.tonic_margin_mean != null ? harm.tonic_margin_mean.toFixed(3) : 'N/A');
+            this._set('aResKeyDrift',     harm.key_drift ?? 'N/A');
+            this._set('aResVI',           harm.dominant_tonic_resolution_pct != null ? `${harm.dominant_tonic_resolution_pct}%` : 'N/A');
+            this._set('aResChords',       harm.chord_changes_per_min ?? 'N/A');
+            this._set('aResChordConf',    harm.chord_change_confidence != null ? harm.chord_change_confidence.toFixed(3) : 'N/A');
+            if (harm.interpretive_labels && harm.interpretive_labels.length > 0) {
+                this._set('aResInterpretive', harm.interpretive_labels.join(' · '));
+                document.getElementById('aResInterpretiveRow').style.display = '';
+            } else {
+                document.getElementById('aResInterpretiveRow').style.display = 'none';
+            }
+            this._renderCandidateTonics('harmonicRootCandidatesContainer', harm.harmonic_root_candidates || {});
         }
 
         // Bass
@@ -1007,6 +1056,67 @@ class MIDIAnalysisApp {
         </svg>`;
     }
 
+    _renderCandidateTonics(containerId, candidates) {
+        const el = document.getElementById(containerId);
+        if (!el) return;
+        // Outer wrapper is the grandparent of the container div
+        const outer = el.parentElement && el.parentElement.parentElement;
+        const entries = Object.entries(candidates);
+        if (!entries.length) { if (outer) outer.style.display = 'none'; return; }
+        const rows = entries.map(([name, scores], idx) => {
+            const pct = Math.round(scores.total_score * 100);
+            const bar = `<div style="height:4px;border-radius:2px;background:rgba(0,153,255,0.2);margin-top:3px;">
+                <div style="height:100%;width:${pct}%;background:#0099ff;border-radius:2px;"></div></div>`;
+            return `<div style="margin-bottom:6px;">
+                <span style="color:${idx===0?'#10b981':'#94b8d0'};font-size:0.85em;">${idx===0?'★ ':''}${name}</span>
+                <span style="float:right;font-size:0.8em;color:#94b8d0;">${scores.total_score.toFixed(3)}</span>
+                ${bar}
+            </div>`;
+        }).join('');
+        el.innerHTML = rows;
+        if (outer) outer.style.display = 'block';
+    }
+
+    _renderTempoCandidates(containerId, candidates) {
+        // candidates is an array of {bpm, score} objects from the backend
+        const el = document.getElementById(containerId);
+        if (!el || !candidates.length) return;
+        const maxScore = Math.max(...candidates.map(c => c.score), 0.001);
+        const rows = candidates.map((c, idx) => {
+            const pct = Math.round(c.score / maxScore * 100);
+            const bar = `<div style="height:4px;border-radius:2px;background:rgba(0,153,255,0.2);margin-top:3px;">
+                <div style="height:100%;width:${pct}%;background:#0099ff;border-radius:2px;"></div></div>`;
+            return `<div style="margin-bottom:6px;">
+                <span style="color:${idx===0?'#10b981':'#94b8d0'};font-size:0.85em;">${idx===0?'★ ':''}${c.bpm} BPM</span>
+                <span style="float:right;font-size:0.8em;color:#94b8d0;">${c.score.toFixed(3)}</span>
+                ${bar}
+            </div>`;
+        }).join('');
+        el.innerHTML = rows;
+    }
+
+    _renderTempoGroups(containerId, groups) {
+        const el = document.getElementById(containerId);
+        if (!el || !groups.length) return;
+        const maxTotal = Math.max(...groups.map(g => g.group_score), 0.001);
+        const rows = groups.map((g, idx) => {
+            const pct = Math.round(g.group_score / maxTotal * 100);
+            const isSelected = idx === 0;
+            const memberStr = g.members.map((b, i) => {
+                const isSel = g.selected_bpm != null && b === g.selected_bpm;
+                return `<span style="color:${isSel ? '#10b981' : '#94b8d0'}">${isSel ? '★' : ''}${b}</span>`;
+            }).join(' · ');
+            const bar = `<div style="height:4px;border-radius:2px;background:rgba(0,153,255,0.2);margin-top:3px;">
+                <div style="height:100%;width:${pct}%;background:${isSelected ? '#10b981' : '#0099ff'};border-radius:2px;"></div></div>`;
+            return `<div style="margin-bottom:8px;">
+                <span style="font-size:0.85em;">${memberStr} BPM</span>
+                <span style="float:right;font-size:0.8em;color:#94b8d0;">${g.group_score.toFixed(3)}</span>
+                ${bar}
+            </div>`;
+        }).join('');
+        el.innerHTML = rows;
+    }
+
     _renderEnergyCurve(containerId, curve) {
         if (!curve.length) return;
         const max = Math.max(...curve, 0.001);
@@ -1141,3 +1251,285 @@ class MIDIAnalysisApp {
 document.addEventListener('DOMContentLoaded', () => {
     window.app = new MIDIAnalysisApp();
 });
+
+// ─── Field Help System ────────────────────────────────────────────────────────
+// Self-contained module. Injects a ⓘ icon next to every labelled field that
+// has a known description. Clicking the icon shows a small popover.
+
+const HELP_DESCRIPTIONS = {
+    // File
+    file:                           'Filename of the analyzed audio',
+    duration_seconds:               'Length of the track in seconds',
+    sample_rate:                    'Audio sample rate in Hz',
+    channels:                       'Number of audio channels in the file',
+    // Tonality
+    key:                            'Detected musical key',
+    mode:                           'Major or minor classification',
+    modal_flavor:                   'Type of scale or mode detected',
+    key_confidence:                 'Confidence in detected key',
+    tonic:                          'Detected tonal center',
+    tonic_margin:                   'Score gap between top tonic candidates',
+    tonic_score:                    'Confidence score of tonic',
+    relative_key_candidate:         'Likely relative major or minor key',
+    relative_key_penalty_applied:   'Whether relative key ambiguity was penalized',
+    candidate_tonics:               'Scored possible tonal centers',
+    correlation:                    'Correlation of pitch content to detected key',
+    pitch_class_histogram:          'Distribution of pitch classes in track',
+    // BPM / Rhythm
+    tempo_bpm:                      'Detected tempo in beats per minute',
+    beat_count:                     'Estimated number of beats in the track',
+    tempo_stability:                'Consistency of tempo over time',
+    tempo_stability_label:          'Human-readable label of tempo stability',
+    tempo_confidence:               'Confidence in selected tempo versus alternatives',
+    tempo_group_confidence:         'Confidence in selected tempo group',
+    beat_grid_confidence:           'Confidence in existence of a stable beat grid',
+    downbeat_confidence:            'Confidence in detecting bar-level starting beats',
+    is_ambient:                     'Whether the track is classified as ambient',
+    ambient_score:                  'Overall likelihood the track is ambient in character',
+    double_time_detected:           'Whether tempo has a strong double-speed interpretation',
+    half_time_detected:             'Whether tempo has a strong half-speed interpretation',
+    tempo_candidates:               'List of possible tempo interpretations and scores',
+    tempo_groups:                   'Grouped tempo candidates based on rhythmic relationships',
+    tempo_normalization_applied:    'Whether tempo was scaled to a standard range',
+    bar_periodicity_score:          'Clarity of repeating bar-length rhythmic structure',
+    phrase_boundary_alignment_score:'Alignment of musical phrases with structural boundaries',
+    low_freq_accent_score:          'Strength of bass accents aligned to beats',
+    onset_accent_score:             'Strength of note attack emphasis in rhythm',
+    // Ambient subscores
+    high_freq_suppression_score:    'Reduction of energy in 2kHz–10kHz range',
+    air_suppression_score:          'Lack of ultra-high frequency content above 10kHz',
+    sustain_bias_score:             'Amount of sustained versus percussive sound',
+    low_mid_bias_score:             'Dominance of low and mid frequencies over highs',
+    dynamic_softness_score:         'Smoothness of loudness changes over time',
+    downbeat_weakness_score:        'How weak or indistinct bar-level accents are',
+    transient_forward_score:        'Strength and prominence of transient attacks',
+    transient_density_score:        'Strength and prominence of transient attacks',
+    // Loudness
+    integrated_lufs:                'Overall perceived loudness over entire track',
+    short_term_lufs:                'Short window loudness measurement',
+    true_peak_dbtp:                 'Maximum peak level including inter-sample peaks',
+    rms_db:                         'Average signal power level',
+    crest_factor_db:                'Difference between peak and RMS loudness',
+    dynamic_range_dr:               'Measured dynamic range of the track',
+    // Frequency
+    spectral_centroid_hz:           'Brightness of sound measured as average frequency',
+    sub_20_60_pct:                  'Percentage of energy between 20Hz and 60Hz',
+    low_60_250_pct:                 'Percentage of energy between 60Hz and 250Hz',
+    mid_250_2k_pct:                 'Percentage of energy between 250Hz and 2kHz',
+    high_2k_10k_pct:                'Percentage of energy between 2kHz and 10kHz',
+    air_10k_plus_pct:               'Percentage of energy above 10kHz',
+    // Stereo
+    stereo_width_pct:               'Perceived stereo width of the track',
+    mid_energy_pct:                 'Percentage of signal energy in mid channel',
+    side_energy_pct:                'Percentage of signal energy in side channel',
+    phase_correlation:              'Stereo phase relationship between channels',
+    mono_compatibility_pct:         'Estimated mono compatibility percentage',
+    mono_compatibility_label:       'Quality of mono playback compatibility',
+    is_mono:                        'Whether audio is mono or stereo',
+    // Harmonic
+    inferred_harmonic_root:         'Detected harmonic root of progression',
+    harmonic_root_score:            'Confidence score of selected harmonic root',
+    harmonic_root_diverges_from_tonic: 'Whether harmonic root differs from tonal center',
+    harmonic_root_candidates:       'Scored candidates for harmonic root note',
+    dominant_bass_pitch_class:      'Most frequent bass pitch class',
+    root_stability_pct:             'Consistency of root across track',
+    root_rank1_pct:                 'Percentage of time root is top candidate',
+    root_top2_pct:                  'Frequency root appears in top two candidates',
+    root_mean_rank:                 'Average rank position of root candidate',
+    tonic_margin_mean:              'Average score gap between top tonic candidates',
+    key_drift:                      'Amount of tonal movement over time',
+    dominant_tonic_resolution_pct:  'Frequency of resolving to tonic chord',
+    chord_changes_per_min:          'Estimated number of chord changes per minute, using windowed chroma comparison. Ambient/drone tracks typically show 0–3; active harmonic music shows 5–20+.',
+    chord_change_confidence:        'How clearly the windowed chroma distances separate into "stable" and "changing" clusters (0–1). Low confidence means transitions are gradual rather than abrupt.',
+    interpretive_labels:            'High-level harmonic character labels derived from multiple signals. "Floating tonic" means the key is clear but the bass rarely anchors it. "Relative-major bass anchoring" means the bass centers on the relative major rather than the tonic.',
+    // Bass
+    dominant_bass_notes:            'Most common bass notes in the track',
+    root_bass_pct:                  'Percentage of bass notes matching tonal root',
+    non_root_bass_pct:              'Percentage of bass notes not matching tonal root',
+    sub_consistency:                'Stability of low-frequency bass presence over time',
+    bass_note_distribution:         'Relative frequency of each pitch class in bass content',
+    // Structure
+    peak_energy_time_sec:           'Time of maximum energy in seconds',
+    density_onsets_per_sec:         'Number of note onsets per second',
+    energy_curve:                   'Relative energy levels across track segments',
+    sections:                       'Detected structural sections of the track',
+    // Optional / Details
+    transient_density_per_min:      'Number of transient events per minute',
+    spectral_flux:                  'Amount of spectral change between frames',
+    harmonic_complexity_pcs:        'Number of distinct pitch classes used',
+    harmonic_complexity_label:      'Qualitative label of harmonic richness',
+};
+
+// Map from the visible label text in the UI to a HELP_DESCRIPTIONS key.
+const LABEL_HELP_KEY = {
+    // File Info
+    'File Name':             'file',
+    'Duration':              'duration_seconds',
+    'Sample Rate':           'sample_rate',
+    'Channels':              'channels',
+    // Tonality
+    'Key':                   'key',
+    'Mode':                  'mode',
+    'Modal Flavor':          'modal_flavor',
+    'Key Confidence':        'key_confidence',
+    'Tonic Margin':          'tonic_margin',
+    'Relative Key':          'relative_key_candidate',
+    'Top Tonic Candidates':  'candidate_tonics',
+    // BPM & Rhythm
+    'Tempo':                 'tempo_bpm',
+    'Beat Count':            'beat_count',
+    'Stability':             'tempo_stability',
+    'Confidence':            'tempo_confidence',
+    'Downbeat Confidence':   'downbeat_confidence',
+    'Track Type':            'is_ambient',
+    'Ambient Score':         'ambient_score',
+    'Beat Grid Confidence':  'beat_grid_confidence',
+    'Time Scaling':          'double_time_detected',
+    'Top Tempo Candidates':  'tempo_candidates',
+    'Tempo Equivalence Groups': 'tempo_groups',
+    // Loudness
+    'Integrated LUFS':       'integrated_lufs',
+    'Short-term LUFS':       'short_term_lufs',
+    'True Peak (dBTP)':      'true_peak_dbtp',
+    'RMS':                   'rms_db',
+    'Crest Factor':          'crest_factor_db',
+    'Dynamic Range (DR)':    'dynamic_range_dr',
+    // Frequency
+    'Spectral Centroid':     'spectral_centroid_hz',
+    // Stereo
+    'Stereo Width':          'stereo_width_pct',
+    'Mid Energy':            'mid_energy_pct',
+    'Side Energy':           'side_energy_pct',
+    'Phase Correlation':     'phase_correlation',
+    'Mono Compatibility':    'mono_compatibility_pct',
+    // Harmonic
+    'Harmonic Root':         'inferred_harmonic_root',
+    'Bass Root':             'dominant_bass_pitch_class',
+    'Root Stability':        'root_stability_pct',
+    'Root #1 Rank %':        'root_rank1_pct',
+    'Root Top-2 %':          'root_top2_pct',
+    'Root Mean Rank':        'root_mean_rank',
+    'Tonic Margin (avg)':    'tonic_margin_mean',
+    'Key Drift':             'key_drift',
+    'V\u2192I Resolution':   'dominant_tonic_resolution_pct',
+    'Chord Changes/min':          'chord_changes_per_min',
+    'Chord Change Confidence':    'chord_change_confidence',
+    'Interpretive Labels':        'interpretive_labels',
+    'Harmonic Root Candidates': 'harmonic_root_candidates',
+    // Bass
+    'Dominant Bass Notes':   'dominant_bass_notes',
+    'Root Bass':             'root_bass_pct',
+    'Non-Root Bass':         'non_root_bass_pct',
+    'Sub Consistency':       'sub_consistency',
+    'Bass Note Distribution':'bass_note_distribution',
+    // Structure
+    'Peak Energy At':        'peak_energy_time_sec',
+    'Event Density':         'density_onsets_per_sec',
+    // Details
+    'Transient Density':     'transient_density_per_min',
+    'Spectral Flux':         'spectral_flux',
+    'Harmonic Complexity':   'harmonic_complexity_pcs',
+};
+
+(function initHelpIcons() {
+    // Shared popover element — one instance, repositioned on demand.
+    const popover = document.createElement('div');
+    popover.className = 'help-popover';
+    popover.setAttribute('role', 'tooltip');
+    document.body.appendChild(popover);
+
+    let activeIcon = null;
+
+    function showPopover(icon, text) {
+        popover.textContent = text;
+        popover.classList.add('visible');
+        icon.classList.add('active');
+        positionPopover(icon);
+    }
+
+    function hidePopover() {
+        popover.classList.remove('visible');
+        if (activeIcon) {
+            activeIcon.classList.remove('active');
+            activeIcon = null;
+        }
+    }
+
+    function positionPopover(icon) {
+        const r   = icon.getBoundingClientRect();
+        const pw  = 240;   // max-width from CSS
+        const gap = 8;
+
+        // Prefer right of icon; fall back to left if too close to viewport edge.
+        let left = r.right + gap;
+        if (left + pw > window.innerWidth - 8) {
+            left = r.left - pw - gap;
+        }
+        if (left < 8) left = 8;
+
+        // Prefer below the icon; shift up if it would clip the bottom.
+        let top = r.top;
+        popover.style.left = left + 'px';
+        popover.style.top  = '-9999px';   // measure height off-screen
+        const ph = popover.offsetHeight;
+        if (top + ph > window.innerHeight - 8) {
+            top = window.innerHeight - ph - 8;
+        }
+        popover.style.top = Math.max(8, top) + 'px';
+    }
+
+    // Inject a ? button after every matching label element.
+    function injectIcons() {
+        // Scope to the audio tab only to avoid matching MIDI labels by accident.
+        // Covers both .info-item labels and standalone .label section headers.
+        document.querySelectorAll('#audioTab .info-item .label, #audioTab .label').forEach(el => {
+            const text = el.textContent.trim();
+            const key  = LABEL_HELP_KEY[text];
+            if (!key || el.querySelector('.help-icon')) return;  // no mapping or already injected
+
+            const desc = HELP_DESCRIPTIONS[key];
+            if (!desc) return;
+
+            const btn = document.createElement('button');
+            btn.className   = 'help-icon';
+            btn.textContent = '?';
+            btn.setAttribute('aria-label', `Help: ${text}`);
+            btn.setAttribute('data-help-key', key);
+            btn.type = 'button';
+            el.appendChild(btn);
+        });
+    }
+
+    // Toggle on click.
+    document.addEventListener('click', e => {
+        const icon = e.target.closest('.help-icon');
+        if (icon) {
+            e.stopPropagation();
+            const key  = icon.getAttribute('data-help-key');
+            const desc = HELP_DESCRIPTIONS[key];
+            if (activeIcon === icon) {
+                hidePopover();
+            } else {
+                hidePopover();
+                activeIcon = icon;
+                showPopover(icon, desc || key);
+            }
+            return;
+        }
+        // Click outside any icon → close.
+        if (activeIcon) hidePopover();
+    });
+
+    // Escape key closes the popover.
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && activeIcon) hidePopover();
+    });
+
+    // Run once on load, then re-run whenever results are revealed so that
+    // dynamically-shown sections (e.g. tempo candidates) also get icons.
+    document.addEventListener('DOMContentLoaded', injectIcons);
+
+    // Re-inject after any results section becomes visible (covers async renders).
+    const observer = new MutationObserver(() => injectIcons());
+    observer.observe(document.body, { childList: true, subtree: true });
+})();

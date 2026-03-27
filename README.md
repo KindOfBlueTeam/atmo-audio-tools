@@ -132,6 +132,41 @@ The custom `midi_parser.py` ignores all meta events (key signatures, tempo, lyri
 
 ---
 
+## Audio Analysis — Field Reference
+
+### Tonality
+
+| Field | Range | Interpretation |
+|---|---|---|
+| `tonic` | Note name (C–B) | The pitch class the key resolves to ("home base") |
+| `mode` | `major` / `minor` / `harmonic minor` | Broadly major = bright, minor = dark |
+| `key` | e.g. `"F# minor"` | Human-readable key label |
+| `key_confidence` | **0–100 %** | How strongly the pitch-class histogram matches the detected key. ≥ 70% = reliable; < 40% = modal/ambiguous |
+| `inferred_harmonic_root` | Note name | The pitch class that functions as the harmonic centre in the audio. Usually matches `tonic`; diverges for drones, pedal notes, or pieces in an atypical mode |
+| `harmonic_root_diverges_from_tonic` | bool | True when `inferred_harmonic_root` ≠ `tonic`. See `harmonic_root_divergence_reason` for explanation |
+| `root_stability_pct` | 0–100 % | Percentage of analysis windows in which the harmonic root was the most prominent pitch class. Higher = more tonally grounded |
+| `dominant_bass_pitch_class` | Note name | The most common pitch class in the bass register (sub + low bands). Often matches `tonic` but reveals pedal-point deviations |
+
+### Tempo & Rhythm
+
+| Field | Range | Interpretation |
+|---|---|---|
+| `tempo_bpm` | float | Detected tempo in beats per minute |
+| `beat_count` | int | Estimated total beats: `tempo_bpm × duration_seconds / 60`. Not from onset detection |
+| `tempo_stability` | 0–1 | Variance of the dominant tempo across 8 time windows. 1.0 = perfectly locked; < 0.65 = significant drift |
+| `tempo_stability_label` | string | `"Very stable"` / `"Stable"` / `"Moderate drift"` / `"High drift"` |
+| `tempo_confidence` | 0–1 | Normalised score margin between the best and second tempo equivalence group. Low confidence means two equally plausible tempos competed |
+| `beat_grid_confidence` | 0–1 | Composite: how certain we are a stable beat grid exists. Combines stability, group dominance, low-frequency pulse, and cross-window consistency. High for any track with a clear pulse, including ambient |
+| `downbeat_confidence` | 0–1 | How clearly bar-level "beat 1" accents are articulated. **Naturally low for ambient / pad-heavy tracks** even when `beat_grid_confidence` is high. High for drum-forward tracks |
+| `double_time_detected` | bool | True when the best tempo group contains a competitive 2× candidate — the tempogram evidence was ambiguous between the selected BPM and its double |
+| `is_ambient` | bool | True when the multi-signal ambient classifier scores ≥ 0.40. Weights: spectral HF suppression (0.25), air suppression (0.15), sustain bias (0.20), low/mid bias (0.20), dynamic softness (0.10), downbeat weakness (0.10), minus transient density penalty (0.20) |
+
+### Scale notes
+- `key_confidence` is 0–100 (percent). All other `*_confidence` and `*_score` fields in the audio analysis are **0–1**.
+- `root_stability_pct`, `root_rank1_pct`, `root_top2_pct`, and `dominant_tonic_resolution_pct` are **0–100** (percent).
+
+---
+
 ## Requirements
 
 - Python 3.9+

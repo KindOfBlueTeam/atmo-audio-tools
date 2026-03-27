@@ -739,3 +739,56 @@ footer a:hover {
         min-width: auto;
     }
 }
+
+/* ── Field help icons & popover ────────────────────────────────────────────── */
+
+.help-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.10);
+    color: #6a8caa;
+    font-size: 8px;
+    font-weight: 700;
+    font-family: sans-serif;
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    margin-left: 5px;
+    vertical-align: middle;
+    line-height: 1;
+    padding: 0;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s;
+}
+
+.help-icon:hover,
+.help-icon.active {
+    background: rgba(0, 153, 255, 0.25);
+    color: #fff;
+    border-color: rgba(0, 153, 255, 0.5);
+}
+
+.help-popover {
+    position: fixed;
+    z-index: 9999;
+    max-width: 240px;
+    background: #111d2b;
+    border: 1px solid rgba(0, 153, 255, 0.30);
+    border-radius: 7px;
+    padding: 9px 12px;
+    font-size: 0.78rem;
+    color: #b8cfe0;
+    line-height: 1.45;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.12s;
+}
+
+.help-popover.visible {
+    opacity: 1;
+    pointer-events: auto;
+}

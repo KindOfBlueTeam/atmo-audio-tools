@@ -224,10 +224,18 @@
                                 <div class="info-item"><span class="label">Mode</span><span class="value" id="aResMode"></span></div>
                                 <div class="info-item"><span class="label">Modal Flavor</span><span class="value" id="aResModalFlavor"></span></div>
                                 <div class="info-item"><span class="label">Key Confidence</span><span class="value" id="aResConfidence"></span></div>
+                                <div class="info-item"><span class="label">Tonic Margin</span><span class="value" id="aResTonicMargin"></span></div>
+                                <div class="info-item"><span class="label">Relative Key</span><span class="value" id="aResRelativeKey"></span></div>
                             </div>
                             <div id="pitchHistContainer" style="display:none; margin-top:15px; padding:12px; background:rgba(255,255,255,0.05); border-radius:6px;">
                                 <div style="font-size:0.85em; margin-bottom:10px; color:#999;">Pitch Class Distribution</div>
                                 <div id="pitchHist" class="vel-chart"></div>
+                            </div>
+                            <div style="display:none;" id="candidateTonicsOuter">
+                                <div style="margin-top:15px; padding:12px; background:rgba(255,255,255,0.05); border-radius:6px;">
+                                    <div style="font-size:0.85em; margin-bottom:10px; color:#999;">Top Tonic Candidates</div>
+                                    <div id="candidateTonicsContainer"></div>
+                                </div>
                             </div>
                         </div>
 
@@ -238,7 +246,20 @@
                                 <div class="info-item"><span class="label">Tempo</span><span class="value" id="aResBPM"></span></div>
                                 <div class="info-item"><span class="label">Beat Count</span><span class="value" id="aResBeats"></span></div>
                                 <div class="info-item"><span class="label">Stability</span><span class="value" id="aResStability"></span></div>
+                                <div class="info-item"><span class="label">Confidence</span><span class="value" id="aResTempoConf"></span></div>
                                 <div class="info-item"><span class="label">Downbeat Confidence</span><span class="value" id="aResDownbeat"></span></div>
+                                <div class="info-item"><span class="label">Track Type</span><span class="value" id="aResAmbient"></span></div>
+                                <div class="info-item"><span class="label">Ambient Score</span><span class="value" id="aResAmbientScore"></span></div>
+                                <div class="info-item"><span class="label">Beat Grid Confidence</span><span class="value" id="aResBeatGrid"></span></div>
+                                <div class="info-item"><span class="label">Time Scaling</span><span class="value" id="aResTimeScale"></span></div>
+                            </div>
+                            <div id="tempoCandidatesOuter" style="display:none; margin-top:0.75rem;">
+                                <div class="label" style="margin-bottom:0.35rem;">Top Tempo Candidates</div>
+                                <div id="tempoCandidatesContainer"></div>
+                            </div>
+                            <div id="tempoGroupsOuter" style="display:none; margin-top:0.75rem;">
+                                <div class="label" style="margin-bottom:0.35rem;">Tempo Equivalence Groups</div>
+                                <div id="tempoGroupsContainer"></div>
                             </div>
                         </div>
 
@@ -287,11 +308,24 @@
                         <div class="result-card">
                             <h3>🎶 Harmonic Behavior</h3>
                             <div class="info-grid">
-                                <div class="info-item"><span class="label">Dominant Root</span><span class="value" id="aResRoot"></span></div>
+                                <div class="info-item"><span class="label">Harmonic Root</span><span class="value" id="aResRoot"></span></div>
+                                <div class="info-item"><span class="label">Bass Root</span><span class="value" id="aResBassRoot"></span></div>
                                 <div class="info-item"><span class="label">Root Stability</span><span class="value" id="aResRootStab"></span></div>
+                                <div class="info-item"><span class="label">Root #1 Rank %</span><span class="value" id="aResRootRank1"></span></div>
+                                <div class="info-item"><span class="label">Root Top-2 %</span><span class="value" id="aResRootTop2"></span></div>
+                                <div class="info-item"><span class="label">Root Mean Rank</span><span class="value" id="aResRootMeanRank"></span></div>
+                                <div class="info-item"><span class="label">Tonic Margin (avg)</span><span class="value" id="aResMarginMean"></span></div>
                                 <div class="info-item"><span class="label">Key Drift</span><span class="value" id="aResKeyDrift"></span></div>
                                 <div class="info-item"><span class="label">V→I Resolution</span><span class="value" id="aResVI"></span></div>
                                 <div class="info-item"><span class="label">Chord Changes/min</span><span class="value" id="aResChords"></span></div>
+                                <div class="info-item"><span class="label">Chord Change Confidence</span><span class="value" id="aResChordConf"></span></div>
+                                <div class="info-item" id="aResInterpretiveRow" style="display:none;"><span class="label">Interpretive Labels</span><span class="value" id="aResInterpretive"></span></div>
+                            </div>
+                            <div style="display:none;" id="harmonicRootCandidatesOuter">
+                                <div style="margin-top:15px; padding:12px; background:rgba(255,255,255,0.05); border-radius:6px;">
+                                    <div style="font-size:0.85em; margin-bottom:10px; color:#999;">Harmonic Root Candidates</div>
+                                    <div id="harmonicRootCandidatesContainer"></div>
+                                </div>
                             </div>
                         </div>
 
