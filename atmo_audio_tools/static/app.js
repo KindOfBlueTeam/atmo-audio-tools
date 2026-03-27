@@ -908,6 +908,19 @@ class MIDIAnalysisApp {
                 try { const j = await response.json(); errMsg = j.error || errMsg; } catch {}
                 throw new Error(errMsg);
             }
+
+            // Read metrics from headers before consuming body
+            const h = response.headers;
+            const fmt = (v, unit) => v && v !== 'None' ? `${v} ${unit}` : '—';
+            document.getElementById('mBefore-lufs').textContent = fmt(h.get('X-Master-Before-lufs'), 'LUFS');
+            document.getElementById('mBefore-peak').textContent = fmt(h.get('X-Master-Before-peak_db'), 'dBFS');
+            document.getElementById('mBefore-rms').textContent  = fmt(h.get('X-Master-Before-rms_db'), 'dB');
+            document.getElementById('mBefore-dr').textContent   = fmt(h.get('X-Master-Before-dr'), 'dB');
+            document.getElementById('mAfter-lufs').textContent  = fmt(h.get('X-Master-After-lufs'), 'LUFS');
+            document.getElementById('mAfter-peak').textContent  = fmt(h.get('X-Master-After-peak_db'), 'dBFS');
+            document.getElementById('mAfter-rms').textContent   = fmt(h.get('X-Master-After-rms_db'), 'dB');
+            document.getElementById('mAfter-dr').textContent    = fmt(h.get('X-Master-After-dr'), 'dB');
+
             const blob = await response.blob();
             const url  = URL.createObjectURL(blob);
             const stem = this.masterTargetFile.name.replace(/\.[^.]+$/, '');

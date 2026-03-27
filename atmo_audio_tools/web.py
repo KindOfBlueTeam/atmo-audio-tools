@@ -9,6 +9,8 @@ from pathlib import Path
 
 import mido
 import numpy as np
+import soundfile as sf
+import pyloudnorm as pyln
 from flask import Flask, render_template, request, jsonify, send_file
 
 from .analyzer import MIDIAnalyzer
@@ -41,6 +43,27 @@ def _sanitize_midi_bytes(data: bytes) -> bytes:
         else:
             i += 1
     return bytes(buf)
+
+
+def _audio_metrics(file_path: str) -> dict:
+    """Compute LUFS, true peak, RMS, and dynamic range for an audio file."""
+    data, rate = sf.read(file_path, always_2d=True)
+    # Integrated loudness (LUFS)
+    try:
+        meter = pyln.Meter(rate)
+        lufs = meter.integrated_loudness(data)
+        lufs = None if (lufs == float('-inf') or lufs != lufs) else round(float(lufs), 1)
+    except Exception:
+        lufs = None
+    # True peak (dBFS)
+    peak_linear = float(np.max(np.abs(data)))
+    peak_db = round(20 * np.log10(peak_linear), 1) if peak_linear > 0 else -96.0
+    # RMS (dB)
+    rms_linear = float(np.sqrt(np.mean(data ** 2)))
+    rms_db = round(20 * np.log10(rms_linear), 1) if rms_linear > 0 else -96.0
+    # Dynamic range (crest factor approximation)
+    dr = round(peak_db - rms_db, 1)
+    return {'lufs': lufs, 'peak_db': peak_db, 'rms_db': rms_db, 'dr': dr}
 
 
 def create_app():
@@ -457,11 +480,15 @@ def create_app():
                 with open(ref_path, 'wb') as f:
                     f.write(ref_data)
 
+                before = _audio_metrics(target_path)
+
                 mg.process(
                     target=target_path,
                     reference=ref_path,
                     results=[mg.Result(output_path, subtype='PCM_24')],
                 )
+
+                after = _audio_metrics(output_path)
 
                 with open(output_path, 'rb') as f:
                     mastered_bytes = f.read()
@@ -472,12 +499,23 @@ def create_app():
             stem = os.path.splitext(os.path.basename(target_file.filename))[0]
             download_name = f"{stem}-mastered.wav"
 
-            return send_file(
+            resp = send_file(
                 output,
                 mimetype='audio/wav',
                 as_attachment=True,
                 download_name=download_name,
             )
+            for key, val in before.items():
+                resp.headers[f'X-Master-Before-{key}'] = str(val)
+            for key, val in after.items():
+                resp.headers[f'X-Master-After-{key}'] = str(val)
+            resp.headers['Access-Control-Expose-Headers'] = (
+                'X-Master-Before-lufs,X-Master-Before-peak_db,'
+                'X-Master-Before-rms_db,X-Master-Before-dr,'
+                'X-Master-After-lufs,X-Master-After-peak_db,'
+                'X-Master-After-rms_db,X-Master-After-dr'
+            )
+            return resp
 
         except Exception as exc:
             app.logger.error("Mastering failed: %s", exc, exc_info=True)

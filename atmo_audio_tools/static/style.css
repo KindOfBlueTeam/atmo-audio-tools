@@ -696,3 +696,35 @@ body::before {
     .master-upload-grid { flex-direction: column; }
     .master-arrow { transform: rotate(90deg); align-self: center; }
 }
+
+.master-metrics-grid {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.master-metrics-col {
+    flex: 1;
+}
+
+.master-metrics-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 0.6rem;
+}
+
+.master-metrics-arrow {
+    font-size: 1.5rem;
+    color: var(--gold);
+    align-self: center;
+    flex-shrink: 0;
+    padding-bottom: 0.25rem;
+}
+
+@media (max-width: 700px) {
+    .master-metrics-grid { flex-direction: column; }
+    .master-metrics-arrow { transform: rotate(90deg); align-self: center; }
+}

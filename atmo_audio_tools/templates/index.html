@@ -443,11 +443,36 @@
                 </div>
 
                 <div id="masterResultSection" style="display:none;" class="results-section">
-                    <div class="result-card" style="text-align:center;">
+                    <div class="result-card">
                         <h3>✅ Mastering Complete</h3>
-                        <p id="masterResultMsg" style="color:var(--text-2); margin-bottom:1.2rem;"></p>
-                        <a id="masterDownloadLink" class="btn btn-analyze" download>Download Mastered Track</a>
-                        <button id="masterResetBtn" class="btn btn-secondary" style="margin-left:0.75rem;">Master Another</button>
+                        <p id="masterResultMsg" style="color:var(--text-2); margin:0.5rem 0 1.4rem;"></p>
+
+                        <div class="master-metrics-grid">
+                            <div class="master-metrics-col">
+                                <div class="master-metrics-label">Before</div>
+                                <div class="info-grid">
+                                    <div class="info-item"><span class="label">Integrated Loudness</span><span class="value" id="mBefore-lufs">—</span></div>
+                                    <div class="info-item"><span class="label">True Peak</span><span class="value" id="mBefore-peak">—</span></div>
+                                    <div class="info-item"><span class="label">RMS Level</span><span class="value" id="mBefore-rms">—</span></div>
+                                    <div class="info-item"><span class="label">Dynamic Range</span><span class="value" id="mBefore-dr">—</span></div>
+                                </div>
+                            </div>
+                            <div class="master-metrics-arrow">→</div>
+                            <div class="master-metrics-col">
+                                <div class="master-metrics-label">After</div>
+                                <div class="info-grid">
+                                    <div class="info-item"><span class="label">Integrated Loudness</span><span class="value" id="mAfter-lufs">—</span></div>
+                                    <div class="info-item"><span class="label">True Peak</span><span class="value" id="mAfter-peak">—</span></div>
+                                    <div class="info-item"><span class="label">RMS Level</span><span class="value" id="mAfter-rms">—</span></div>
+                                    <div class="info-item"><span class="label">Dynamic Range</span><span class="value" id="mAfter-dr">—</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:1.4rem;">
+                            <a id="masterDownloadLink" class="btn btn-analyze" download>Download Mastered Track</a>
+                            <button id="masterResetBtn" class="btn btn-secondary" style="margin-left:0.75rem;">Master Another</button>
+                        </div>
                     </div>
                 </div>
 
