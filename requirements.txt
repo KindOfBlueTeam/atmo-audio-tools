@@ -7,3 +7,4 @@ librosa>=0.10
 soundfile>=0.12
 pyloudnorm>=0.1.1
 scipy>=1.11
+numba>=0.57,<0.62

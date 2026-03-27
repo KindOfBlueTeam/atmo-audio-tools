@@ -1,13 +1,6 @@
 """Comprehensive audio file analysis using librosa, soundfile, and pyloudnorm."""
 from __future__ import annotations
 
-# Must be set before numba/librosa are imported so that librosa's
-# @numba.guvectorize decorators create plain Python functions rather than
-# Dispatcher objects.  If it is already set in the environment (e.g. via the
-# Procfile or render.yaml) setdefault leaves it unchanged.
-import os
-os.environ.setdefault('NUMBA_DISABLE_JIT', '1')
-
 import io
 import tempfile
 import numpy as np

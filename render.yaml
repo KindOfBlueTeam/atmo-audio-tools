@@ -3,9 +3,7 @@ services:
     name: atmo-audio-toolbox
     runtime: python
     buildCommand: pip install -e ".[web]" gunicorn librosa soundfile pyloudnorm scipy
-    startCommand: NUMBA_DISABLE_JIT=1 gunicorn "midi_analysis.web:create_app()" --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    startCommand: gunicorn "midi_analysis.web:create_app()" --bind 0.0.0.0:$PORT --workers 2 --timeout 120
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.9
-      - key: NUMBA_DISABLE_JIT
-        value: "1"
