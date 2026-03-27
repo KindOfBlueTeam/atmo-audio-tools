@@ -660,6 +660,23 @@ body::before {
     .ripple-ring:nth-child(4) { width: 280px; height: 56px; }
 }
 
+/* ── Global loading banner ─────────────────────────────────────── */
+
+#globalLoadingBanner {
+    width: 100%;
+    padding: 1.8rem 0 1.2rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.global-loading-text {
+    text-align: center;
+    color: var(--text-2);
+    font-size: 0.95rem;
+    letter-spacing: 0.03em;
+    margin-bottom: 1.2rem;
+}
+
 /* ── Master tab layout ─────────────────────────────────────────── */
 
 .section-heading {

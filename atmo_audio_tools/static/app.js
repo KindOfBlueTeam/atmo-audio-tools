@@ -20,7 +20,8 @@ class MIDIAnalysisApp {
             browseBtn: document.getElementById('browseBtn'),
             fileName: document.getElementById('fileName'),
             analyzeBtn: document.getElementById('analyzeBtn'),
-            loadingSpinner: document.getElementById('loadingSpinner'),
+            globalLoadingBanner: document.getElementById('globalLoadingBanner'),
+            globalLoadingText:   document.getElementById('globalLoadingText'),
             resultsSection: document.getElementById('resultsSection'),
             errorSection: document.getElementById('errorSection'),
             errorMessage: document.getElementById('errorMessage'),
@@ -41,7 +42,6 @@ class MIDIAnalysisApp {
             audioBrowseBtn:       document.getElementById('audioBrowseBtn'),
             audioFileName:        document.getElementById('audioFileName'),
             audioAnalyzeBtn:      document.getElementById('audioAnalyzeBtn'),
-            audioLoadingSpinner:  document.getElementById('audioLoadingSpinner'),
             audioResultsSection:  document.getElementById('audioResultsSection'),
             audioErrorSection:    document.getElementById('audioErrorSection'),
             audioErrorMessage:    document.getElementById('audioErrorMessage'),
@@ -58,7 +58,6 @@ class MIDIAnalysisApp {
             masterReferenceBrowseBtn: document.getElementById('masterReferenceBrowseBtn'),
             masterReferenceFileName:  document.getElementById('masterReferenceFileName'),
             masterSubmitBtn:        document.getElementById('masterSubmitBtn'),
-            masterLoadingSpinner:   document.getElementById('masterLoadingSpinner'),
             masterResultPending:    document.getElementById('masterResultPending'),
             masterResultComplete:   document.getElementById('masterResultComplete'),
             masterResultMsg:        document.getElementById('masterResultMsg'),
@@ -557,20 +556,20 @@ class MIDIAnalysisApp {
 
 
     showLoading() {
-        this.elements.loadingSpinner.style.display = 'block';
+        this.showGlobalLoading('Analyzing your MIDI file…');
         this.elements.resultsSection.style.display = 'none';
         this.hideError();
     }
 
     hideLoading() {
-        this.elements.loadingSpinner.style.display = 'none';
+        this.hideGlobalLoading();
     }
 
     showError(message) {
         this.elements.errorSection.style.display = 'block';
         this.elements.errorMessage.textContent = message;
         this.elements.resultsSection.style.display = 'none';
-        this.elements.loadingSpinner.style.display = 'none';
+        this.hideGlobalLoading();
     }
 
     hideError() {
@@ -808,6 +807,18 @@ class MIDIAnalysisApp {
         }
     }
 
+    // ── Global loading banner ─────────────────────────────────────────────────
+
+    showGlobalLoading(msg) {
+        this.elements.globalLoadingText.textContent      = msg;
+        this.elements.globalLoadingBanner.style.display  = 'block';
+        this.elements.globalLoadingBanner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    hideGlobalLoading() {
+        this.elements.globalLoadingBanner.style.display = 'none';
+    }
+
     // ── Tab switching ─────────────────────────────────────────────────────────
 
     switchTab(tab) {
@@ -845,7 +856,7 @@ class MIDIAnalysisApp {
         const formData = new FormData();
         formData.append('audio_file', this.audioFile);
 
-        this.elements.audioLoadingSpinner.style.display = 'block';
+        this.showGlobalLoading('Analyzing your audio file — this may take a moment…');
         this.elements.audioResultsSection.style.display = 'none';
         this.hideAudioError();
 
@@ -858,7 +869,7 @@ class MIDIAnalysisApp {
         } catch (error) {
             this.showAudioError(`Analysis error: ${error.message}`);
         } finally {
-            this.elements.audioLoadingSpinner.style.display = 'none';
+            this.hideGlobalLoading();
         }
     }
 
@@ -897,9 +908,8 @@ class MIDIAnalysisApp {
         formData.append('target',    this.masterTargetFile);
         formData.append('reference', this.masterReferenceFile);
 
-        this.elements.masterLoadingSpinner.style.display  = 'block';
-        this.elements.masterResultSection.style.display   = 'none';
-        this.elements.masterSubmitBtn.style.display       = 'none';
+        this.showGlobalLoading('Mastering your track — this may take a few minutes…');
+        this.elements.masterSubmitBtn.style.display = 'none';
         this.hideMasterError();
 
         try {
@@ -934,7 +944,7 @@ class MIDIAnalysisApp {
             this.showMasterError(`Mastering error: ${error.message}`);
             this.elements.masterSubmitBtn.style.display = 'inline-block';
         } finally {
-            this.elements.masterLoadingSpinner.style.display = 'none';
+            this.hideGlobalLoading();
         }
     }
 
@@ -1484,7 +1494,7 @@ class MIDIAnalysisApp {
         this.elements.audioErrorSection.style.display = 'block';
         this.elements.audioErrorMessage.textContent = message;
         this.elements.audioResultsSection.style.display = 'none';
-        this.elements.audioLoadingSpinner.style.display = 'none';
+        this.hideGlobalLoading();
     }
 
     hideAudioError() {

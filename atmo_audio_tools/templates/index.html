@@ -55,6 +55,17 @@
         <!-- ══════════════════════════ MAIN ═══════════════════════════════ -->
         <main class="main-content">
 
+            <!-- ══════════════════ GLOBAL LOADING BANNER ══════════════════════ -->
+            <div id="globalLoadingBanner" style="display:none;">
+                <p id="globalLoadingText" class="global-loading-text"></p>
+                <div class="ripple-pond master-ripple-pond">
+                    <div class="ripple-ring"></div>
+                    <div class="ripple-ring"></div>
+                    <div class="ripple-ring"></div>
+                    <div class="ripple-ring"></div>
+                </div>
+            </div>
+
             <!-- ═══════════════════════════ MIDI TAB ═══════════════════════════ -->
             <div id="midiTab" class="tab-content" style="display:none;">
 
@@ -72,17 +83,6 @@
                     <button id="analyzeBtn" class="btn btn-analyze" style="display: none;">Analyze</button>
                 </section>
 
-                <div id="loadingSpinner" class="spinner" style="display: none;">
-                    <div class="spinner-content">
-                        <div class="ripple-pond">
-                            <div class="ripple-ring"></div>
-                            <div class="ripple-ring"></div>
-                            <div class="ripple-ring"></div>
-                            <div class="ripple-ring"></div>
-                        </div>
-                        <p>Analyzing your MIDI file...</p>
-                    </div>
-                </div>
 
                 <section id="resultsSection" class="results-section" style="display: none;">
 
@@ -208,17 +208,6 @@
                     <button id="audioAnalyzeBtn" class="btn btn-analyze" style="display:none;">Analyze Audio</button>
                 </section>
 
-                <div id="audioLoadingSpinner" class="spinner" style="display:none;">
-                    <div class="spinner-content">
-                        <div class="ripple-pond">
-                            <div class="ripple-ring"></div>
-                            <div class="ripple-ring"></div>
-                            <div class="ripple-ring"></div>
-                            <div class="ripple-ring"></div>
-                        </div>
-                        <p>Analyzing audio — this may take a few minutes…</p>
-                    </div>
-                </div>
 
                 <section id="audioResultsSection" class="results-section" style="display:none;">
 
@@ -462,16 +451,6 @@
 
                     </div>
 
-                    <!-- Wide ripple — shown during processing, same width as three-col -->
-                    <div id="masterLoadingSpinner" class="master-loading" style="display:none;">
-                        <div class="ripple-pond master-ripple-pond">
-                            <div class="ripple-ring"></div>
-                            <div class="ripple-ring"></div>
-                            <div class="ripple-ring"></div>
-                            <div class="ripple-ring"></div>
-                        </div>
-                        <p class="master-loading-text">Mastering your track…</p>
-                    </div>
 
                 </section>
 
