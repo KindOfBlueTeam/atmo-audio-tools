@@ -674,57 +674,167 @@ body::before {
     margin-bottom: 1.8rem;
 }
 
-.master-upload-grid {
+/* Three-column stage layout */
+.master-three-col {
     display: flex;
-    align-items: flex-start;
-    gap: 1.5rem;
+    align-items: stretch;
+    gap: 0;
+    width: 100%;
 }
 
 .master-slot {
     flex: 1;
-}
-
-.master-arrow {
-    font-size: 2rem;
-    color: var(--gold);
-    align-self: center;
-    flex-shrink: 0;
-    padding-bottom: 0.5rem;
-}
-
-@media (max-width: 700px) {
-    .master-upload-grid { flex-direction: column; }
-    .master-arrow { transform: rotate(90deg); align-self: center; }
-}
-
-.master-metrics-grid {
+    min-width: 0;
     display: flex;
-    align-items: flex-start;
-    gap: 1rem;
+    flex-direction: column;
 }
 
-.master-metrics-col {
+.master-slot .upload-box {
     flex: 1;
 }
 
-.master-metrics-label {
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 0.6rem;
-}
-
-.master-metrics-arrow {
-    font-size: 1.5rem;
+.master-col-arrow {
+    font-size: 1.8rem;
     color: var(--gold);
     align-self: center;
     flex-shrink: 0;
-    padding-bottom: 0.25rem;
+    padding: 0 0.75rem;
+    padding-bottom: 1rem;
+}
+
+/* Result box — same border style as upload boxes but distinct pending state */
+.master-result-box {
+    cursor: default;
+}
+
+.master-result-pending {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    opacity: 0.45;
+}
+
+.master-result-complete {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 0;
+}
+
+.master-done-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--success);
+    margin-bottom: 0.35rem;
+}
+
+.master-done-sub {
+    font-size: 0.72rem;
+    color: var(--text-2);
+    text-align: center;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+}
+
+/* Compact metrics table inside result box */
+.mrm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+    margin-bottom: 0.9rem;
+}
+
+.mrm-table th {
+    font-size: 0.65rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    padding: 0 0.3rem 0.35rem;
+    text-align: right;
+}
+
+.mrm-table th:first-child { text-align: left; }
+
+.mrm-label {
+    color: var(--text-2);
+    font-size: 0.72rem;
+    padding: 0.2rem 0.3rem 0.2rem 0;
+    white-space: nowrap;
+}
+
+.mrm-before {
+    color: var(--text-2);
+    text-align: right;
+    padding: 0.2rem 0.3rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.mrm-arr {
+    color: var(--gold);
+    text-align: center;
+    padding: 0.2rem 0.1rem;
+    font-size: 0.7rem;
+}
+
+.mrm-after {
+    color: var(--gold-bright);
+    text-align: right;
+    padding: 0.2rem 0 0.2rem 0.3rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.master-dl-btn {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.master-reset-btn {
+    width: 100%;
+}
+
+/* Wide ripple below the three columns */
+.master-loading {
+    width: 100%;
+    margin-top: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.master-ripple-pond {
+    position: relative;
+    width: 100%;
+    height: 56px;
+    overflow: visible;
+}
+
+.master-ripple-pond .ripple-ring {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 2px solid var(--blue);
+    box-shadow: 0 0 8px var(--blue-glow);
+    animation: ripple-expand 2.4s ease-out infinite;
+}
+
+.master-ripple-pond .ripple-ring:nth-child(1) { width: 25%;  height: 14px; animation-delay: 0s; }
+.master-ripple-pond .ripple-ring:nth-child(2) { width: 50%;  height: 28px; animation-delay: 0.6s; }
+.master-ripple-pond .ripple-ring:nth-child(3) { width: 75%;  height: 42px; animation-delay: 1.2s; }
+.master-ripple-pond .ripple-ring:nth-child(4) { width: 100%; height: 56px; animation-delay: 1.8s; }
+
+.master-loading-text {
+    color: var(--text-2);
+    font-size: 0.9rem;
 }
 
 @media (max-width: 700px) {
-    .master-metrics-grid { flex-direction: column; }
-    .master-metrics-arrow { transform: rotate(90deg); align-self: center; }
+    .master-three-col { flex-direction: column; }
+    .master-col-arrow { transform: rotate(90deg); align-self: center; padding: 0.5rem 0; }
 }

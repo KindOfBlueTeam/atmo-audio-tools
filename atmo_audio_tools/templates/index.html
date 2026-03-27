@@ -397,8 +397,10 @@
                     <h2 class="section-heading">Reference Mastering</h2>
                     <p class="section-sub">Upload your mix and a reference track. Atmo will match the loudness and tone of your reference.</p>
 
-                    <div class="master-upload-grid">
+                    <!-- Three-stage flow -->
+                    <div class="master-three-col" id="masterThreeCol">
 
+                        <!-- Stage 1: Your Mix -->
                         <div class="master-slot">
                             <div class="upload-box" id="masterTargetBox">
                                 <div class="upload-icon">🎵</div>
@@ -410,8 +412,9 @@
                             <div id="masterTargetFileName" class="file-name" style="display:none;"></div>
                         </div>
 
-                        <div class="master-arrow">→</div>
+                        <div class="master-col-arrow">→</div>
 
+                        <!-- Stage 2: Reference Track -->
                         <div class="master-slot">
                             <div class="upload-box" id="masterReferenceBox">
                                 <div class="upload-icon">🎼</div>
@@ -423,58 +426,54 @@
                             <div id="masterReferenceFileName" class="file-name" style="display:none;"></div>
                         </div>
 
+                        <div class="master-col-arrow">→</div>
+
+                        <!-- Stage 3: Result -->
+                        <div class="master-slot">
+                            <div class="upload-box master-result-box" id="masterResultBox">
+
+                                <!-- Pending -->
+                                <div id="masterResultPending" class="master-result-pending">
+                                    <div class="upload-icon master-result-icon">🎚️</div>
+                                    <h3>Mastered Output</h3>
+                                    <p>Ready after processing</p>
+                                    <button id="masterSubmitBtn" class="btn btn-analyze" style="display:none; margin-top:0.5rem;">Master My Track</button>
+                                </div>
+
+                                <!-- Complete -->
+                                <div id="masterResultComplete" style="display:none;" class="master-result-complete">
+                                    <div class="master-done-title">✅ Mastering Complete</div>
+                                    <p id="masterResultMsg" class="master-done-sub"></p>
+                                    <table class="mrm-table">
+                                        <thead><tr><th></th><th>Before</th><th></th><th>After</th></tr></thead>
+                                        <tbody>
+                                            <tr><td class="mrm-label">LUFS</td><td id="mBefore-lufs" class="mrm-before">—</td><td class="mrm-arr">→</td><td id="mAfter-lufs" class="mrm-after">—</td></tr>
+                                            <tr><td class="mrm-label">Peak</td><td id="mBefore-peak" class="mrm-before">—</td><td class="mrm-arr">→</td><td id="mAfter-peak" class="mrm-after">—</td></tr>
+                                            <tr><td class="mrm-label">RMS</td><td id="mBefore-rms" class="mrm-before">—</td><td class="mrm-arr">→</td><td id="mAfter-rms" class="mrm-after">—</td></tr>
+                                            <tr><td class="mrm-label">DR</td><td id="mBefore-dr" class="mrm-before">—</td><td class="mrm-arr">→</td><td id="mAfter-dr" class="mrm-after">—</td></tr>
+                                        </tbody>
+                                    </table>
+                                    <a id="masterDownloadLink" class="btn btn-analyze master-dl-btn" download>Download</a>
+                                    <button id="masterResetBtn" class="btn btn-secondary master-reset-btn">Master Another</button>
+                                </div>
+
+                            </div>
+                        </div>
+
                     </div>
 
-                    <div style="text-align:center; margin-top:1.5rem;">
-                        <button id="masterSubmitBtn" class="btn btn-analyze" style="display:none;">Master My Track</button>
+                    <!-- Wide ripple — shown during processing, same width as three-col -->
+                    <div id="masterLoadingSpinner" class="master-loading" style="display:none;">
+                        <div class="ripple-pond master-ripple-pond">
+                            <div class="ripple-ring"></div>
+                            <div class="ripple-ring"></div>
+                            <div class="ripple-ring"></div>
+                            <div class="ripple-ring"></div>
+                        </div>
+                        <p class="master-loading-text">Mastering your track…</p>
                     </div>
+
                 </section>
-
-                <div id="masterLoadingSpinner" class="spinner" style="display:none;">
-                    <div class="spinner-content">
-                        <div class="ripple-pond">
-                            <div class="ripple-ring"></div>
-                            <div class="ripple-ring"></div>
-                            <div class="ripple-ring"></div>
-                            <div class="ripple-ring"></div>
-                        </div>
-                        <p>Mastering your track…</p>
-                    </div>
-                </div>
-
-                <div id="masterResultSection" style="display:none;" class="results-section">
-                    <div class="result-card">
-                        <h3>✅ Mastering Complete</h3>
-                        <p id="masterResultMsg" style="color:var(--text-2); margin:0.5rem 0 1.4rem;"></p>
-
-                        <div class="master-metrics-grid">
-                            <div class="master-metrics-col">
-                                <div class="master-metrics-label">Before</div>
-                                <div class="info-grid">
-                                    <div class="info-item"><span class="label">Integrated Loudness</span><span class="value" id="mBefore-lufs">—</span></div>
-                                    <div class="info-item"><span class="label">True Peak</span><span class="value" id="mBefore-peak">—</span></div>
-                                    <div class="info-item"><span class="label">RMS Level</span><span class="value" id="mBefore-rms">—</span></div>
-                                    <div class="info-item"><span class="label">Dynamic Range</span><span class="value" id="mBefore-dr">—</span></div>
-                                </div>
-                            </div>
-                            <div class="master-metrics-arrow">→</div>
-                            <div class="master-metrics-col">
-                                <div class="master-metrics-label">After</div>
-                                <div class="info-grid">
-                                    <div class="info-item"><span class="label">Integrated Loudness</span><span class="value" id="mAfter-lufs">—</span></div>
-                                    <div class="info-item"><span class="label">True Peak</span><span class="value" id="mAfter-peak">—</span></div>
-                                    <div class="info-item"><span class="label">RMS Level</span><span class="value" id="mAfter-rms">—</span></div>
-                                    <div class="info-item"><span class="label">Dynamic Range</span><span class="value" id="mAfter-dr">—</span></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style="margin-top:1.4rem;">
-                            <a id="masterDownloadLink" class="btn btn-analyze" download>Download Mastered Track</a>
-                            <button id="masterResetBtn" class="btn btn-secondary" style="margin-left:0.75rem;">Master Another</button>
-                        </div>
-                    </div>
-                </div>
 
                 <div id="masterErrorSection" style="display:none;" class="error-section">
                     <div class="error-box">

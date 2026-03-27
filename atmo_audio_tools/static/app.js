@@ -57,15 +57,16 @@ class MIDIAnalysisApp {
             masterReferenceInput:     document.getElementById('masterReferenceInput'),
             masterReferenceBrowseBtn: document.getElementById('masterReferenceBrowseBtn'),
             masterReferenceFileName:  document.getElementById('masterReferenceFileName'),
-            masterSubmitBtn:       document.getElementById('masterSubmitBtn'),
-            masterLoadingSpinner:  document.getElementById('masterLoadingSpinner'),
-            masterResultSection:   document.getElementById('masterResultSection'),
-            masterResultMsg:       document.getElementById('masterResultMsg'),
-            masterDownloadLink:    document.getElementById('masterDownloadLink'),
-            masterResetBtn:        document.getElementById('masterResetBtn'),
-            masterErrorSection:    document.getElementById('masterErrorSection'),
-            masterErrorMessage:    document.getElementById('masterErrorMessage'),
-            masterRetryBtn:        document.getElementById('masterRetryBtn'),
+            masterSubmitBtn:        document.getElementById('masterSubmitBtn'),
+            masterLoadingSpinner:   document.getElementById('masterLoadingSpinner'),
+            masterResultPending:    document.getElementById('masterResultPending'),
+            masterResultComplete:   document.getElementById('masterResultComplete'),
+            masterResultMsg:        document.getElementById('masterResultMsg'),
+            masterDownloadLink:     document.getElementById('masterDownloadLink'),
+            masterResetBtn:         document.getElementById('masterResetBtn'),
+            masterErrorSection:     document.getElementById('masterErrorSection'),
+            masterErrorMessage:     document.getElementById('masterErrorMessage'),
+            masterRetryBtn:         document.getElementById('masterRetryBtn'),
         };
     }
 
@@ -924,10 +925,11 @@ class MIDIAnalysisApp {
             const blob = await response.blob();
             const url  = URL.createObjectURL(blob);
             const stem = this.masterTargetFile.name.replace(/\.[^.]+$/, '');
-            this.elements.masterDownloadLink.href              = url;
-            this.elements.masterDownloadLink.download          = `${stem}-mastered.wav`;
-            this.elements.masterResultMsg.textContent          = `${this.masterTargetFile.name} mastered to match ${this.masterReferenceFile.name}`;
-            this.elements.masterResultSection.style.display    = 'block';
+            this.elements.masterDownloadLink.href             = url;
+            this.elements.masterDownloadLink.download         = `${stem}-mastered.wav`;
+            this.elements.masterResultMsg.textContent         = `${this.masterTargetFile.name} → ${this.masterReferenceFile.name}`;
+            this.elements.masterResultPending.style.display   = 'none';
+            this.elements.masterResultComplete.style.display  = 'flex';
         } catch (error) {
             this.showMasterError(`Mastering error: ${error.message}`);
             this.elements.masterSubmitBtn.style.display = 'inline-block';
@@ -944,7 +946,8 @@ class MIDIAnalysisApp {
         this.elements.masterTargetFileName.style.display    = 'none';
         this.elements.masterReferenceFileName.style.display = 'none';
         this.elements.masterSubmitBtn.style.display         = 'none';
-        this.elements.masterResultSection.style.display     = 'none';
+        this.elements.masterResultPending.style.display     = '';
+        this.elements.masterResultComplete.style.display    = 'none';
         this.hideMasterError();
     }
 
