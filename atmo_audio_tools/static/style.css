@@ -838,6 +838,11 @@ body::before {
     flex-direction: column;
     align-items: center;
     gap: 0.4rem;
+}
+
+.master-result-pending .upload-icon,
+.master-result-pending h3,
+.master-result-pending p {
     opacity: 0.45;
 }
 
