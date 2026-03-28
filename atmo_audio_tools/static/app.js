@@ -921,7 +921,6 @@ class MIDIAnalysisApp {
         this.showGlobalLoading('Starting mastering process…');
         this.elements.masterLogStream.innerHTML    = '';
         this.elements.masterLogStream.style.display = 'block';
-        this.elements.masterSubmitBtn.style.display = 'none';
         this.elements.masterSubmitBtn.classList.add('flashing');
         this.hideMasterError();
 
