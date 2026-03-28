@@ -559,6 +559,9 @@ class SynthUI {
         this._events     = null;
         this._bpm        = 120;
         this._loopActive = false;
+        this._kbStart    = 24;   // C1
+        this._kbEnd      = 72;   // C5 (4 octaves default)
+        this._kbWrap     = null;
 
         // Wave selector and LFO dest element refs for preset updates
         this._osc1WaveSel  = null;
@@ -626,7 +629,12 @@ class SynthUI {
         const kbWrap = document.createElement('div');
         kbWrap.className = 'synth-keyboard-wrap';
         root.appendChild(kbWrap);
-        this._buildKeyboard(kbWrap);
+        this._kbWrap = kbWrap;
+        this._buildKeyboard();
+
+        // Rebuild keyboard when container width changes
+        const ro = new ResizeObserver(() => this._updateKeyboardOctaves());
+        ro.observe(root);
 
         // ── Transport ──
         const transport = document.createElement('div');
@@ -789,17 +797,42 @@ class SynthUI {
 
     // ── Keyboard ──
 
-    _buildKeyboard(wrap) {
+    _updateKeyboardOctaves() {
+        const WHITE_W  = 38;
+        const OCT_W    = 7 * WHITE_W;          // 266px per octave
+        const MIN_OCT  = 2;
+        const MAX_OCT  = 7;
+        const available = this._kbWrap ? this._kbWrap.parentElement.clientWidth : 0;
+        if (available === 0) return;
+
+        const octaves  = Math.min(MAX_OCT, Math.max(MIN_OCT, Math.floor((available - WHITE_W) / OCT_W)));
+        const newStart = 24;                   // always anchor at C1
+        const newEnd   = newStart + octaves * 12;
+
+        if (newStart === this._kbStart && newEnd === this._kbEnd) return;
+        this._kbStart = newStart;
+        this._kbEnd   = newEnd;
+        this._buildKeyboard();
+    }
+
+    _buildKeyboard() {
+        const wrap = this._kbWrap;
+        if (!wrap) return;
+
         const WHITE_W = 38, WHITE_H = 108, BLACK_W = 22, BLACK_H = 66;
-        // C1=24 … C5=72  (4 octaves)
-        const KB_START = 24, KB_END = 72;
         const BLACK_SEMIS = [1, 3, 6, 8, 10];  // C# D# F# G# A#
-        // Black key left offsets within one octave (px from octave start), tuned for W=38
-        const BLACK_X = [27, 65, 141, 179, 217];
+        const BLACK_X     = [27, 65, 141, 179, 217];
+        const kbStart = this._kbStart;
+        const kbEnd   = this._kbEnd;
+
+        // Release any active notes before rebuilding
+        if (this._synth) this._synth.panic();
+        wrap.innerHTML = '';
+        this._keyEls = {};
 
         // Count white keys to set inner width
         let totalWhite = 0;
-        for (let m = KB_START; m <= KB_END; m++) {
+        for (let m = kbStart; m <= kbEnd; m++) {
             if (!BLACK_SEMIS.includes(m % 12)) totalWhite++;
         }
 
@@ -808,8 +841,8 @@ class SynthUI {
         wrap.appendChild(inner);
 
         let wIdx = 0;
-        for (let midi = KB_START; midi <= KB_END; midi++) {
-            const semi    = midi % 12;            // 0=C … 11=B
+        for (let midi = kbStart; midi <= kbEnd; midi++) {
+            const semi    = midi % 12;
             const isBlack = BLACK_SEMIS.includes(semi);
             const div     = document.createElement('div');
             div.dataset.midi = midi;
@@ -819,7 +852,7 @@ class SynthUI {
                 div.style.cssText = `left:${wIdx * WHITE_W}px;width:${WHITE_W}px;height:${WHITE_H}px;`;
                 wIdx++;
             } else {
-                const oct  = Math.floor((midi - KB_START) / 12);
+                const oct  = Math.floor((midi - kbStart) / 12);
                 const bidx = BLACK_SEMIS.indexOf(semi);
                 const left = oct * 7 * WHITE_W + BLACK_X[bidx];
                 div.className     = 'synth-key black';
@@ -832,13 +865,13 @@ class SynthUI {
         }
 
         // Octave labels on each C key
-        for (let m = KB_START; m <= KB_END; m++) {
+        for (let m = kbStart; m <= kbEnd; m++) {
             if (m % 12 === 0) {
                 const el = this._keyEls[m];
                 if (!el) continue;
                 const span = document.createElement('span');
                 span.className   = 'synth-key-label';
-                span.textContent = `C${Math.floor(m / 12) - 1}`; // C1=24, C2=36, etc.
+                span.textContent = `C${Math.floor(m / 12) - 1}`;
                 el.appendChild(span);
             }
         }
