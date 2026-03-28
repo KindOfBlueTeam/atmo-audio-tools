@@ -236,8 +236,15 @@ def create_app():
         response.headers['X-Content-Type-Options'] = 'nosniff'
         response.headers['X-Frame-Options'] = 'DENY'
         response.headers['Content-Security-Policy'] = (
-            "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'"
+            "default-src 'self'; style-src 'self' 'unsafe-inline'; "
+            "script-src 'self'; img-src 'self' data:; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "connect-src 'self' https://fonts.googleapis.com"
         )
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        response.headers['Referrer-Policy'] = 'no-referrer'
+        response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
         return response
 
     @app.route('/')
@@ -282,7 +289,7 @@ def create_app():
 
         except ValueError as exc:
             app.logger.error("MIDI analysis ValueError: %s", exc, exc_info=True)
-            return jsonify({'error': f'Invalid MIDI file: {exc}'}), 400
+            return jsonify({'error': 'Invalid MIDI file. Please check the file and try again.'}), 400
         except Exception as exc:
             app.logger.error("MIDI analysis failed: %s", exc, exc_info=True)
             return jsonify({'error': 'Analysis failed: please try another file'}), 400
@@ -364,7 +371,7 @@ def create_app():
 
         except Exception as exc:
             app.logger.error("Humanize failed: %s", exc, exc_info=True)
-            return jsonify({'error': f'Humanization failed: {exc}'}), 400
+            return jsonify({'error': 'Humanization failed. Please try again.'}), 400
 
     @app.route('/api/analyze-audio', methods=['POST'])
     def analyze_audio_file():
@@ -397,7 +404,7 @@ def create_app():
 
         except Exception as exc:
             app.logger.error("Audio analysis failed: %s", exc, exc_info=True)
-            return jsonify({'error': f'Analysis failed: {exc}'}), 400
+            return jsonify({'error': 'Analysis failed. Please check your file and try again.'}), 400
 
     @app.route('/api/normalize-velocity', methods=['POST'])
     def normalize_velocity():
@@ -469,7 +476,7 @@ def create_app():
 
         except Exception as exc:
             app.logger.error("Normalize velocity failed: %s", exc, exc_info=True)
-            return jsonify({'error': f'Normalization failed: {exc}'}), 400
+            return jsonify({'error': 'Normalization failed. Please try again.'}), 400
 
     @app.route('/api/humanize-timing', methods=['POST'])
     def humanize_timing():
@@ -560,7 +567,7 @@ def create_app():
 
         except Exception as exc:
             app.logger.error("Humanize timing failed: %s", exc, exc_info=True)
-            return jsonify({'error': f'Timing humanization failed: {exc}'}), 400
+            return jsonify({'error': 'Timing humanization failed. Please try again.'}), 400
 
     @app.route('/api/master', methods=['POST'])
     def master_audio():
@@ -750,7 +757,7 @@ def create_app():
 
         except Exception as exc:
             app.logger.error("Loudness normalization failed: %s", exc, exc_info=True)
-            return jsonify({'error': f'Normalization failed: {exc}'}), 400
+            return jsonify({'error': 'Normalization failed. Please try again.'}), 400
 
     @app.route('/api/loudness/download/<job_id>')
     def loudness_download(job_id):
@@ -905,7 +912,7 @@ def create_app():
 
         except Exception as exc:
             app.logger.error("Spectrogram failed: %s", exc, exc_info=True)
-            return jsonify({'error': f'Spectrogram failed: {exc}'}), 400
+            return jsonify({'error': 'Spectrogram generation failed. Please check your file and try again.'}), 400
 
     @app.route('/api/stems/download-zip/<job_id>')
     def stems_download_zip(job_id):
@@ -981,7 +988,7 @@ def create_app():
                             'event_count': len(events), 'filename': safe})
         except Exception as exc:
             app.logger.error("Demo MIDI parse failed: %s", exc, exc_info=True)
-            return jsonify({'error': f'Parse failed: {exc}'}), 400
+            return jsonify({'error': 'Failed to parse MIDI file.'}), 400
 
     @app.route('/api/synth/parse-midi', methods=['POST'])
     def synth_parse_midi():
@@ -1037,7 +1044,7 @@ def create_app():
             })
         except Exception as exc:
             app.logger.error("Synth MIDI parse failed: %s", exc, exc_info=True)
-            return jsonify({'error': f'MIDI parse failed: {exc}'}), 400
+            return jsonify({'error': 'Failed to parse MIDI file.'}), 400
 
     @app.route('/api/sheet', methods=['POST'])
     def midi_to_sheet():
@@ -1110,7 +1117,7 @@ def create_app():
 
         except Exception as exc:
             app.logger.error("MIDI to sheet failed: %s", exc, exc_info=True)
-            return jsonify({'error': f'Conversion failed: {exc}'}), 400
+            return jsonify({'error': 'Conversion failed. Please check your file and try again.'}), 400
 
     @app.route('/api/sheet/download/<job_id>')
     def sheet_download(job_id):
@@ -1203,7 +1210,7 @@ def create_app():
 
         except Exception as exc:
             app.logger.error("Audio conversion failed: %s", exc, exc_info=True)
-            return jsonify({'error': f'Conversion failed: {exc}'}), 400
+            return jsonify({'error': 'Conversion failed. Please check your file and try again.'}), 400
 
     @app.route('/api/convert/download/<job_id>')
     def convert_download(job_id):
@@ -1242,4 +1249,4 @@ def run(host: str = '127.0.0.1', port: int = 8010, debug: bool = False):
 
 
 if __name__ == '__main__':
-    run(debug=True)
+    run(debug=False)
