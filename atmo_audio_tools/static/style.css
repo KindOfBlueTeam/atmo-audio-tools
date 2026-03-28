@@ -102,8 +102,8 @@ body::before {
     width: 100%;
     height: auto;
     display: block;
-    filter: drop-shadow(0 0 18px rgba(200, 150, 12, 0.40))
-            drop-shadow(0 0 36px rgba(0, 100, 220, 0.28));
+    filter: drop-shadow(0 0 18px rgba(0, 120, 255, 0.45))
+            drop-shadow(0 0 36px rgba(0, 80, 220, 0.25));
 }
 
 .logo-wordmark {
@@ -369,6 +369,16 @@ body::before {
     background: var(--card-bg);
 }
 
+.choose-another-link {
+    display: block;
+    margin-top: 0.6rem;
+    font-size: 0.8rem;
+    color: var(--text-3);
+    text-decoration: none;
+    letter-spacing: 0.04em;
+}
+.choose-another-link:hover { color: var(--text-2); text-decoration: underline; }
+
 /* ── Buttons ──────────────────────────────────────────────────────────────── */
 
 .btn {
@@ -581,6 +591,55 @@ body::before {
 
 .results-section { animation: fadeUp 0.5s ease both; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── MIDI Actions Bar ─────────────────────────────────────────────────────── */
+
+.midi-actions-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+    align-items: flex-start;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.midi-actions-bar::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg,
+        transparent 0%, var(--gold-soft) 30%, var(--blue-soft) 70%, transparent 100%);
+    opacity: 0.35;
+    border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.midi-action-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+    align-items: flex-start;
+}
+
+.midi-action-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    min-width: 170px;
+    max-width: 230px;
+}
+
+.midi-action-desc {
+    font-size: 0.72rem;
+    color: var(--text-3);
+    line-height: 1.5;
+    margin: 0;
+    letter-spacing: 0.01em;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────── */
 
 .results-container {
     display: grid;
@@ -871,6 +930,7 @@ body::before {
 
     .main-content { height: auto; overflow-y: visible; padding: 1.5rem 1rem 3rem; }
     .page-banner { width: calc(100% + 2rem); margin-left: -1rem; margin-top: -1.5rem; height: 180px; }
+    #globalLoadingBanner { left: 1rem; max-width: none; }
     .results-container { grid-template-columns: 1fr; }
     .info-grid { grid-template-columns: repeat(2, 1fr); }
     .tonal-cols { grid-template-columns: 1fr; gap: 1rem 0; }
@@ -884,18 +944,34 @@ body::before {
 /* ── Global loading banner ─────────────────────────────────────── */
 
 #globalLoadingBanner {
-    width: 100%;
-    padding: 1.8rem 0 1.2rem;
-    margin-bottom: 2rem;
-    border-bottom: 1px solid var(--border);
+    position: fixed;
+    bottom: 0;
+    /* Match main-content's left padding so our centre = tab-content centre */
+    left: calc(var(--sidebar-width) + 2.5rem);
+    right: 0;
+    max-width: 1060px;   /* same cap as .tab-content */
+    padding: 1.2rem 0 1.6rem;
+    background: linear-gradient(to top, var(--bg) 60%, transparent 100%);
+    z-index: 100;
+    text-align: center;
+    pointer-events: none;
 }
 
 .global-loading-text {
-    text-align: center;
     color: var(--text-2);
-    font-size: 0.95rem;
-    letter-spacing: 0.03em;
-    margin-bottom: 1.2rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+}
+
+.master-ripple-pond {
+    position: relative;
+    width: 480px;
+    max-width: 100%;
+    height: 56px;
+    margin: 0 auto;
+    overflow: visible;
 }
 
 .master-log-stream {
@@ -1613,13 +1689,6 @@ body::before {
     flex-direction: column;
     align-items: center;
     gap: 0.8rem;
-}
-
-.master-ripple-pond {
-    position: relative;
-    width: 100%;
-    height: 56px;
-    overflow: visible;
 }
 
 .master-ripple-pond .ripple-ring {

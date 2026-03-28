@@ -132,6 +132,27 @@
                         <span class="fi-item"><span class="fi-label">Format</span> <span id="resFormat"></span></span>
                     </div>
 
+                    <div id="midiActionsBar" class="midi-actions-bar" style="display:none;">
+                        <div id="dynamicsBtns" class="midi-action-group" style="display:none;">
+                            <div class="midi-action-item">
+                                <button id="humanizeBtn" class="btn btn-humanize">Humanize Velocity</button>
+                                <p class="midi-action-desc">Adds subtle random velocity variation to make machine-quantized MIDI feel more human.</p>
+                            </div>
+                        </div>
+                        <div id="humanizeTimingGroup" class="midi-action-group" style="display:none;">
+                            <div class="midi-action-item">
+                                <button id="humanizeTimingBtn" class="btn btn-humanize">Humanize Timing</button>
+                                <p class="midi-action-desc">Adds natural timing offsets to perfectly quantized notes, making the performance feel less mechanical.</p>
+                            </div>
+                        </div>
+                        <div id="normalizeVelocityGroup" class="midi-action-group" style="display:none;">
+                            <div class="midi-action-item">
+                                <button id="normalizeVelocityBtn" class="btn btn-normalize">Normalize Velocity</button>
+                                <p class="midi-action-desc">Levels all note velocities to a consistent average.</p>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="results-container">
 
                         <div class="result-card">
@@ -141,13 +162,6 @@
                                 <div class="info-item"><span class="label">Max Polyphony</span><span class="value" id="resPolyphony"></span></div>
                                 <div class="info-item"><span class="label">Note Range</span><span class="value" id="resNoteRange"></span></div>
                                 <div class="info-item"><span class="label">Time Signature</span><span class="value" id="resTimeSignature"></span></div>
-                            </div>
-                            <div id="instrumentsList" class="instruments-list"></div>
-                        </div>
-
-                        <div class="result-card">
-                            <h3>Key &amp; Mode</h3>
-                            <div class="info-grid">
                                 <div class="info-item" id="resKeyItem">
                                     <span class="label" id="resKeyLabel">Key</span>
                                     <span class="value" id="resKey"></span>
@@ -156,6 +170,7 @@
                                 <div class="info-item"><span class="label">Correlation</span><span class="value" id="resCorrelation"></span></div>
                                 <div class="info-item"><span class="label">Modal Flavor</span><span class="value" id="resModalFlavor"></span></div>
                             </div>
+                            <div id="instrumentsList" class="instruments-list"></div>
                         </div>
 
                         <div class="result-card">
@@ -178,14 +193,10 @@
                                 <div class="info-item"><span class="label">Velocity Std Dev</span><span class="value" id="resVelStdDev"></span></div>
                                 <div class="info-item"><span class="label">Human vs Software</span><span class="value" id="resHumanness"></span></div>
                             </div>
-                            <div id="humanessSpectrumContainer" style="display:none;" class="sub-panel" style="margin-top:1.1rem;">
+                            <div id="humanessSpectrumContainer" style="display:none;" class="sub-panel">
                                 <div class="sub-panel-label">← Clearly Human &nbsp;|&nbsp; Clearly Software →</div>
                                 <div class="spectrum-bar"><div id="spectrumFill" class="spectrum-fill"></div></div>
                                 <div style="font-size:0.75rem; margin-top:0.5rem; color:var(--text-3);" id="humanessLabel"></div>
-                                <div id="dynamicsBtns" style="display:none; margin-top:0.9rem; gap:0.5rem; flex-wrap:wrap;">
-                                    <button id="humanizeBtn" class="btn btn-humanize">Humanize Velocity</button>
-                                    <button id="normalizeVelocityBtn" class="btn btn-normalize">Normalize Velocity</button>
-                                </div>
                             </div>
                             <div id="velChartContainer" style="display:none;" class="sub-panel">
                                 <div class="sub-panel-label">Velocity Distribution</div>
@@ -205,7 +216,6 @@
                                 <div class="sub-panel-label">← Clearly Human &nbsp;|&nbsp; Clearly Software →</div>
                                 <div class="spectrum-bar"><div id="quantizationSpectrumFill" class="spectrum-fill"></div></div>
                                 <div style="font-size:0.75rem; margin-top:0.5rem; color:var(--text-3);" id="quantizationLabel"></div>
-                                <button id="humanizeTimingBtn" class="btn btn-humanize" style="display:none; margin-top:0.9rem;">Humanize Timing</button>
                             </div>
                         </div>
 
@@ -255,6 +265,7 @@
                     </div>
                     <div id="audioFileName" class="file-name" style="display:none;"></div>
                     <button id="audioAnalyzeBtn" class="btn btn-analyze" style="display:none;">Analyze Audio</button>
+                    <a id="audioChooseAnotherBtn" href="#" class="choose-another-link" style="display:none;">Choose another file</a>
                 </section>
 
 

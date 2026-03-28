@@ -32,11 +32,14 @@ class MIDIAnalysisApp {
             retryBtn: document.getElementById('retryBtn'),
             analyzeAnotherBtn: document.getElementById('analyzeAnotherBtn'),
             copyJsonBtn: document.getElementById('downloadJsonBtn') || document.getElementById('copyJsonBtn'),
+            midiActionsBar: document.getElementById('midiActionsBar'),
             dynamicsBtns: document.getElementById('dynamicsBtns'),
+            normalizeVelocityGroup: document.getElementById('normalizeVelocityGroup'),
             humanizeBtn: document.getElementById('humanizeBtn'),
             normalizeVelocityBtn: document.getElementById('normalizeVelocityBtn'),
             humanizeModal: document.getElementById('humanizeModal'),
             cancelHumanizeBtn: document.getElementById('cancelHumanizeBtn'),
+            humanizeTimingGroup: document.getElementById('humanizeTimingGroup'),
             humanizeTimingBtn: document.getElementById('humanizeTimingBtn'),
             humanizeTimingModal: document.getElementById('humanizeTimingModal'),
             cancelHumanizeTimingBtn: document.getElementById('cancelHumanizeTimingBtn'),
@@ -46,6 +49,7 @@ class MIDIAnalysisApp {
             audioBrowseBtn:       document.getElementById('audioBrowseBtn'),
             audioFileName:        document.getElementById('audioFileName'),
             audioAnalyzeBtn:      document.getElementById('audioAnalyzeBtn'),
+            audioChooseAnotherBtn: document.getElementById('audioChooseAnotherBtn'),
             audioResultsSection:  document.getElementById('audioResultsSection'),
             audioErrorSection:    document.getElementById('audioErrorSection'),
             audioErrorMessage:    document.getElementById('audioErrorMessage'),
@@ -220,6 +224,7 @@ class MIDIAnalysisApp {
             if (e.dataTransfer.files.length > 0) this.handleAudioFileSelect(e.dataTransfer.files[0]);
         });
         this.elements.audioAnalyzeBtn.addEventListener('click', () => this.analyzeAudioFile());
+        this.elements.audioChooseAnotherBtn.addEventListener('click', (e) => { e.preventDefault(); this.resetAudio(); });
         this.elements.audioAnalyzeAnotherBtn.addEventListener('click', () => this.resetAudio());
         this.elements.audioRetryBtn.addEventListener('click', () => this.resetAudio());
         this.elements.copyAudioJsonBtn?.addEventListener('click', () => {
@@ -468,6 +473,7 @@ class MIDIAnalysisApp {
         }
 
         this.midiFile = file;
+        this.elements.uploadBox.style.display = 'none';
         this.elements.fileName.textContent = `${file.name} (${this.formatFileSize(file.size)})`;
         this.elements.fileName.style.display = 'block';
         this.elements.analyzeBtn.style.display = 'block';
@@ -626,6 +632,8 @@ class MIDIAnalysisApp {
 
                 // Show dynamics action buttons whenever we have velocity data
                 this.elements.dynamicsBtns.style.display = 'flex';
+                this.elements.normalizeVelocityGroup.style.display = 'flex';
+                this.elements.midiActionsBar.style.display = 'flex';
             }
             
             this.displayVelocityChart(dyn);
@@ -661,7 +669,8 @@ class MIDIAnalysisApp {
                 qLabel = 'Clearly Software — All notes snapped to grid';
             }
             document.getElementById('quantizationLabel').textContent = qLabel;
-            this.elements.humanizeTimingBtn.style.display = 'inline-block';
+            this.elements.humanizeTimingGroup.style.display = 'flex';
+            this.elements.midiActionsBar.style.display = 'flex';
         }
 
         // Store result for download; write to raw display if present
@@ -964,7 +973,14 @@ class MIDIAnalysisApp {
         this.hideError();
         this.hideLoading();
 
+        // Reset actions bar
+        this.elements.midiActionsBar.style.display = 'none';
+        this.elements.dynamicsBtns.style.display = 'none';
+        this.elements.normalizeVelocityGroup.style.display = 'none';
+        this.elements.humanizeTimingGroup.style.display = 'none';
+
         // Reset file input
+        this.elements.uploadBox.style.display = '';
         this.elements.midiInput.value = '';
         this.elements.fileName.style.display = 'none';
         this.elements.analyzeBtn.style.display = 'none';
@@ -1039,9 +1055,11 @@ class MIDIAnalysisApp {
             return;
         }
         this.audioFile = file;
+        this.elements.audioUploadBox.style.display = 'none';
         this.elements.audioFileName.textContent = `${file.name} (${this.formatFileSize(file.size)})`;
         this.elements.audioFileName.style.display = 'block';
         this.elements.audioAnalyzeBtn.style.display = 'block';
+        this.elements.audioChooseAnotherBtn.style.display = 'block';
         this.hideAudioError();
     }
 
@@ -1222,6 +1240,7 @@ class MIDIAnalysisApp {
             return;
         }
         this.loudnessFile = file;
+        this.elements.loudnessUploadBox.style.display = 'none';
         this.elements.loudnessFileName.textContent    = file.name;
         this.elements.loudnessFileName.style.display  = 'block';
         this.elements.loudnessPlatformSection.style.display = 'flex';
@@ -1271,6 +1290,7 @@ class MIDIAnalysisApp {
 
     resetLoudness() {
         this.loudnessFile = null;
+        this.elements.loudnessUploadBox.style.display = '';
         this.elements.loudnessInput.value             = '';
         this.elements.loudnessFileName.style.display  = 'none';
         this.elements.loudnessFileName.textContent    = '';
@@ -1297,6 +1317,7 @@ class MIDIAnalysisApp {
             return;
         }
         this.sheetFile = file;
+        this.elements.sheetUploadBox.style.display = 'none';
         this.elements.sheetFileName.textContent   = file.name;
         this.elements.sheetFileName.style.display = 'block';
         this.elements.sheetConvertBtn.style.display = 'inline-block';
@@ -1348,6 +1369,7 @@ class MIDIAnalysisApp {
 
     resetSheet() {
         this.sheetFile = null;
+        this.elements.sheetUploadBox.style.display  = '';
         this.elements.sheetInput.value              = '';
         this.elements.sheetFileName.style.display   = 'none';
         this.elements.sheetConvertBtn.style.display = 'none';
@@ -1374,6 +1396,7 @@ class MIDIAnalysisApp {
             return;
         }
         this.stemsFile = file;
+        this.elements.stemsUploadBox.style.display = 'none';
         this.elements.stemsFileName.textContent   = file.name;
         this.elements.stemsFileName.style.display = 'block';
         this.elements.stemsSplitBtn.style.display = 'inline-block';
@@ -1481,6 +1504,7 @@ class MIDIAnalysisApp {
             return;
         }
         this.specFile = file;
+        this.elements.specUploadBox.style.display = 'none';
         this.elements.specFileName.textContent   = `${file.name} (${this.formatFileSize(file.size)})`;
         this.elements.specFileName.style.display = 'block';
         this.elements.specAnalyzeBtn.style.display = 'inline-block';
@@ -1672,6 +1696,7 @@ class MIDIAnalysisApp {
     resetSpectrogram() {
         this.specFile = null;
         this._lastSpectrogramData = null;
+        this.elements.specUploadBox.style.display      = '';
         this.elements.specInput.value                  = '';
         this.elements.specFileName.style.display       = 'none';
         this.elements.specAnalyzeBtn.style.display     = 'none';
@@ -1690,6 +1715,7 @@ class MIDIAnalysisApp {
 
     resetStems() {
         this.stemsFile = null;
+        this.elements.stemsUploadBox.style.display  = '';
         this.elements.stemsInput.value              = '';
         this.elements.stemsFileName.style.display   = 'none';
         this.elements.stemsSplitBtn.style.display   = 'none';
@@ -1719,6 +1745,7 @@ class MIDIAnalysisApp {
             return;
         }
         this.convertFile = file;
+        this.elements.convertUploadBox.style.display = 'none';
         this.elements.convertFileName.textContent   = `${file.name} (${this.formatFileSize(file.size)})`;
         this.elements.convertFileName.style.display = 'block';
         this.elements.convertResult.style.display   = 'none';
@@ -1778,6 +1805,7 @@ class MIDIAnalysisApp {
 
     resetConvert() {
         this.convertFile = null;
+        this.elements.convertUploadBox.style.display        = '';
         this.elements.convertInput.value                    = '';
         this.elements.convertFileName.style.display         = 'none';
         this.elements.convertFileName.textContent           = '';
@@ -2314,8 +2342,10 @@ class MIDIAnalysisApp {
         this.elements.audioResultsSection.style.display = 'none';
         this.hideAudioError();
         this.elements.audioInput.value = '';
+        this.elements.audioUploadBox.style.display = '';
         this.elements.audioFileName.style.display = 'none';
         this.elements.audioAnalyzeBtn.style.display = 'none';
+        this.elements.audioChooseAnotherBtn.style.display = 'none';
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
