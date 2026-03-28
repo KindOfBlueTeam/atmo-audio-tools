@@ -274,11 +274,12 @@ def create_app():
         .page-banner img {
             position: absolute;
             width: calc(50% + 700px);
-            height: auto;
+            height: 100%;
+            object-fit: cover;
+            object-position: center top;
             top: 0;
             left: 50%;
             transform: translateX(-50%);
-            object-fit: none;
         }
     """
 
