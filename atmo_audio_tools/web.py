@@ -240,10 +240,67 @@ def create_app():
         )
         return response
 
+    # ── Layout experiment CSS overrides ───────────────────────────────────────
+    _LAYOUT_A = """
+        /* A: Conservative nudge — 1300px cap, same sidebar, same 2-col cards */
+        :root { --sidebar-width: 220px; }
+        .tab-content { max-width: 1300px; }
+        #globalLoadingBanner { max-width: 1300px; }
+    """
+
+    _LAYOUT_B = """
+        /* B: Dashboard — 1560px cap, 3-col fluid cards on wide screens */
+        :root { --sidebar-width: 220px; }
+        .tab-content { max-width: 1560px; }
+        #globalLoadingBanner { max-width: 1560px; }
+        .results-container {
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        }
+    """
+
+    _LAYOUT_C = """
+        /* C: Full-bleed — no cap, wider sidebar, 3-col fluid cards */
+        :root { --sidebar-width: 260px; }
+        .tab-content { max-width: none; }
+        #globalLoadingBanner { max-width: none; right: 2.5rem; }
+        .results-container {
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        }
+    """
+
+    _LAYOUT_D = """
+        /* D: Wide & structured — 1600px cap, wider sidebar, 2-col big cards */
+        :root { --sidebar-width: 260px; }
+        .tab-content { max-width: 1600px; }
+        #globalLoadingBanner { max-width: 1600px; }
+        .main-content { padding: 2.5rem 3.5rem 8rem; }
+        .result-card { padding: 2rem 2.25rem; }
+    """
+
     @app.route('/')
     def index():
         """Serve the main analysis page."""
         return render_template('index.html')
+
+    @app.route('/layout-a')
+    def layout_a():
+        """Layout experiment A: conservative nudge to 1300px."""
+        return render_template('index.html', layout_css=_LAYOUT_A)
+
+    @app.route('/layout-b')
+    def layout_b():
+        """Layout experiment B: dashboard, 3-col fluid cards."""
+        return render_template('index.html', layout_css=_LAYOUT_B)
+
+    @app.route('/layout-c')
+    def layout_c():
+        """Layout experiment C: full-bleed, no cap, wider sidebar."""
+        return render_template('index.html', layout_css=_LAYOUT_C)
+
+    @app.route('/layout-d')
+    def layout_d():
+        """Layout experiment D: 1600px, wider sidebar, bigger card padding."""
+        return render_template('index.html', layout_css=_LAYOUT_D)
 
     @app.route('/b')
     def index_b():
