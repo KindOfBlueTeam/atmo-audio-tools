@@ -922,6 +922,7 @@ class MIDIAnalysisApp {
         this.elements.masterLogStream.innerHTML    = '';
         this.elements.masterLogStream.style.display = 'block';
         this.elements.masterSubmitBtn.style.display = 'none';
+        this.elements.masterSubmitBtn.classList.add('flashing');
         this.hideMasterError();
 
         // Start the job
@@ -966,6 +967,7 @@ class MIDIAnalysisApp {
                     this.showMasterError(`Mastering failed: ${data.error}`);
                     this.hideGlobalLoading();
                     this.elements.masterLogStream.style.display = 'none';
+                    this.elements.masterSubmitBtn.classList.remove('flashing');
                     this.elements.masterSubmitBtn.style.display = 'inline-block';
                 }
             } catch (err) {
@@ -1014,6 +1016,7 @@ class MIDIAnalysisApp {
         this.elements.masterResultComplete.style.display    = 'none';
         this.elements.masterLogStream.innerHTML             = '';
         this.elements.masterLogStream.style.display        = 'none';
+        this.elements.masterSubmitBtn.classList.remove('flashing');
         this.hideMasterError();
     }
 
