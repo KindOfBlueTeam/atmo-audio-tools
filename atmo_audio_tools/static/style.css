@@ -298,12 +298,34 @@ body::before {
 }
 
 .btn-primary {
-    background: rgba(0, 80, 180, 0.22);
-    color: #66ccff; border-color: rgba(0, 153, 255, 0.28);
+    background: #006600;
+    color: #d4ffd4;
+    font-weight: 800;
+    border-top:    2px solid rgba(120, 255, 120, 0.35);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.55);
+    border-left:   1px solid rgba(0, 120, 0, 0.55);
+    border-right:  1px solid rgba(0, 120, 0, 0.55);
+    text-shadow: 0 0 10px rgba(80, 255, 80, 0.8);
+    box-shadow:
+        0 0 22px rgba(0, 220, 0, 0.55),
+        0 0 50px rgba(0, 220, 0, 0.20),
+        inset 0 1px 0 rgba(120, 255, 120, 0.20),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.35);
 }
 .btn-primary:hover {
-    background: rgba(0, 100, 220, 0.38); border-color: var(--blue);
-    box-shadow: 0 0 16px rgba(0, 153, 255, 0.25); color: #fff;
+    background: #00aa00;
+    color: #ffffff;
+    text-shadow: 0 0 12px rgba(80, 255, 80, 1);
+    box-shadow:
+        0 0 35px rgba(0, 220, 0, 0.85),
+        0 0 70px rgba(0, 220, 0, 0.40),
+        inset 0 1px 0 rgba(140, 255, 140, 0.35);
+}
+.btn-primary:active {
+    transform: translateY(1px);
+    box-shadow:
+        0 0 14px rgba(0, 200, 0, 0.5),
+        inset 0 2px 5px rgba(0, 0, 0, 0.5);
 }
 
 /* ── Tungsten CTA — shared by all primary action buttons ────────── */
@@ -346,21 +368,88 @@ body::before {
 }
 
 .btn-secondary {
-    background: transparent; color: var(--text-2); border-color: var(--border);
+    background: #0d0d0d;
+    color: rgba(190, 190, 190, 0.55);
+    font-weight: 800;
+    border-top:    2px solid rgba(200, 200, 200, 0.10);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.45);
+    border-left:   1px solid rgba(150, 150, 150, 0.12);
+    border-right:  1px solid rgba(150, 150, 150, 0.12);
+    text-shadow: none;
+    box-shadow:
+        0 0 4px rgba(150, 150, 150, 0.06),
+        inset 0 1px 0 rgba(200, 200, 200, 0.06),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.3);
 }
-.btn-secondary:hover { color: var(--text-1); border-color: var(--text-2); }
+.btn-secondary:hover {
+    color: rgba(220, 220, 220, 0.85);
+    background: #141414;
+    box-shadow:
+        0 0 12px rgba(180, 180, 180, 0.15),
+        inset 0 1px 0 rgba(200, 200, 200, 0.10);
+}
+.btn-secondary:active {
+    transform: translateY(1px);
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+}
 
 .btn-humanize {
-    background: rgba(16, 185, 129, 0.15); color: #34d399;
-    border-color: rgba(16, 185, 129, 0.30);
+    background: #005533;
+    color: #b8ffe0;
+    font-weight: 800;
+    border-top:    2px solid rgba(80, 255, 160, 0.30);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.55);
+    border-left:   1px solid rgba(0, 160, 80, 0.45);
+    border-right:  1px solid rgba(0, 160, 80, 0.45);
+    text-shadow: 0 0 10px rgba(50, 255, 140, 0.75);
+    box-shadow:
+        0 0 18px rgba(0, 200, 100, 0.45),
+        0 0 40px rgba(0, 200, 100, 0.15),
+        inset 0 1px 0 rgba(80, 255, 160, 0.18),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.35);
 }
-.btn-humanize:hover { background: rgba(16, 185, 129, 0.28); box-shadow: 0 0 12px rgba(16, 185, 129, 0.25); }
+.btn-humanize:hover {
+    background: #007744;
+    color: #ffffff;
+    text-shadow: 0 0 12px rgba(50, 255, 140, 1);
+    box-shadow:
+        0 0 28px rgba(0, 200, 100, 0.75),
+        0 0 60px rgba(0, 200, 100, 0.30),
+        inset 0 1px 0 rgba(100, 255, 160, 0.30);
+}
+.btn-humanize:active {
+    transform: translateY(1px);
+    box-shadow: 0 0 10px rgba(0, 200, 100, 0.4), inset 0 2px 5px rgba(0, 0, 0, 0.5);
+}
 
 .btn-normalize {
-    background: rgba(200, 150, 12, 0.12); color: var(--gold-soft);
-    border-color: var(--card-border-h);
+    background: var(--tungsten-dim);
+    color: var(--tungsten-text);
+    font-weight: 800;
+    border-top:    2px solid rgba(255, 200, 120, 0.28);
+    border-bottom: 2px solid rgba(0, 0, 0, 0.55);
+    border-left:   1px solid rgba(160, 80, 10, 0.45);
+    border-right:  1px solid rgba(160, 80, 10, 0.45);
+    text-shadow: 0 0 8px rgba(255, 160, 60, 0.65);
+    box-shadow:
+        0 0 16px rgba(255, 148, 40, 0.35),
+        0 0 35px rgba(255, 148, 40, 0.12),
+        inset 0 1px 0 rgba(255, 200, 120, 0.16),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.35);
 }
-.btn-normalize:hover { background: rgba(200, 150, 12, 0.25); }
+.btn-normalize:hover {
+    background: var(--tungsten);
+    color: #fff;
+    text-shadow: 0 0 12px rgba(255, 180, 80, 1);
+    box-shadow:
+        0 0 28px var(--tungsten-glow),
+        0 0 60px rgba(255, 148, 40, 0.30),
+        inset 0 1px 0 rgba(255, 220, 140, 0.25);
+}
+.btn-normalize:active {
+    transform: translateY(1px);
+    box-shadow: 0 0 10px var(--tungsten-glow), inset 0 2px 5px rgba(0, 0, 0, 0.5);
+}
 
 /* ── Spinner & ripple ─────────────────────────────────────────────────────── */
 
@@ -888,40 +977,6 @@ body::before {
         color: rgba(255, 200, 120, 0.45);
         text-shadow: none;
     }
-}
-
-/* Master slot "Choose File" — studio console LED, bright green */
-.master-slot .btn-primary {
-    background: #006600;
-    color: #d4ffd4;
-    font-weight: 800;
-    letter-spacing: 0.18em;
-    border-top:    2px solid rgba(120, 255, 120, 0.35);
-    border-bottom: 2px solid rgba(0, 0, 0, 0.55);
-    border-left:   1px solid rgba(0, 120, 0, 0.55);
-    border-right:  1px solid rgba(0, 120, 0, 0.55);
-    border-radius: 3px;
-    text-shadow: 0 0 10px rgba(80, 255, 80, 0.8);
-    box-shadow:
-        0 0 22px rgba(0, 220, 0, 0.55),
-        0 0 50px rgba(0, 220, 0, 0.20),
-        inset 0 1px 0 rgba(120, 255, 120, 0.20),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.35);
-}
-.master-slot .btn-primary:hover {
-    background: #00aa00;
-    box-shadow:
-        0 0 35px rgba(0, 220, 0, 0.85),
-        0 0 70px rgba(0, 220, 0, 0.40),
-        inset 0 1px 0 rgba(140, 255, 140, 0.35);
-    color: #ffffff;
-    text-shadow: 0 0 12px rgba(80, 255, 80, 1);
-}
-.master-slot .btn-primary:active {
-    transform: translateY(1px);
-    box-shadow:
-        0 0 14px rgba(0, 200, 0, 0.5),
-        inset 0 2px 5px rgba(0, 0, 0, 0.5);
 }
 
 /* Result box — same border style as upload boxes but distinct pending state */
