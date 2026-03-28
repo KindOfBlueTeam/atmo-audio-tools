@@ -440,6 +440,16 @@ body::before {
 .sidebar-footer a { color: var(--text-2); text-decoration: none; transition: color 0.2s; }
 .sidebar-footer a:hover { color: var(--gold); }
 
+/* ── Buy Me a Coffee ─────────────────────────────────────────────────────── */
+
+.bmc-wrapper {
+    position: fixed;
+    top: 1rem;
+    right: 1.25rem;
+    z-index: 999;
+    line-height: 0;
+}
+
 /* ── Main content ─────────────────────────────────────────────────────────── */
 
 .main-content {
