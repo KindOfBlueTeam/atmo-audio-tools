@@ -21,7 +21,7 @@ from .audio_analyzer import analyze_audio
 
 _AUDIO_EXTENSIONS = {'.wav', '.aif', '.aiff', '.flac', '.ogg', '.mp3'}
 _AUDIO_MAX_BYTES  = 100 * 1024 * 1024  # 100 MB per file
-_REQUEST_MAX_BYTES = 250 * 1024 * 1024  # 250 MB total (mastering sends two files)
+_REQUEST_MAX_BYTES = 300 * 1024 * 1024  # 300 MB total (mastering sends two files)
 
 # Limit concurrent audio analyses — each one peaks at ~2 GB RAM
 _AUDIO_SEMAPHORE  = threading.Semaphore(2)
