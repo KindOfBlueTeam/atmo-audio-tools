@@ -1021,10 +1021,12 @@ class MIDIAnalysisApp {
         this.elements.globalLoadingText.textContent      = msg;
         this.elements.globalLoadingBanner.style.display  = 'block';
         this.elements.globalLoadingBanner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        BannerController.setProcessing(true);
     }
 
     hideGlobalLoading() {
         this.elements.globalLoadingBanner.style.display = 'none';
+        BannerController.setProcessing(false);
     }
 
     // ── Tab switching ─────────────────────────────────────────────────────────
@@ -1044,6 +1046,7 @@ class MIDIAnalysisApp {
         document.getElementById('synthTab').style.display          = tab === 'synth'        ? '' : 'none';
         document.getElementById('convertTab').style.display        = tab === 'convert'      ? '' : 'none';
         document.getElementById('drumTab').style.display           = tab === 'drum'         ? '' : 'none';
+        document.getElementById('tempoTab').style.display          = tab === 'tempo'        ? '' : 'none';
     }
 
     // ── Audio file handling ───────────────────────────────────────────────────
@@ -2659,4 +2662,39 @@ const LABEL_HELP_KEY = {
     // Re-inject after any results section becomes visible (covers async renders).
     const observer = new MutationObserver(() => injectIcons());
     observer.observe(document.body, { childList: true, subtree: true });
+})();
+
+/* ── Banner Controller ──────────────────────────────────────────────────────
+   Switches between tools-banner-static.png and tools-banner-loop.mp4.
+   Active when: a tool is processing (analysis/mastering/etc.) OR a
+   Performance tool (Drum Machine, Synth, Tap Tempo) is playing.
+   ────────────────────────────────────────────────────────────────────────── */
+
+const BannerController = (() => {
+    const img = document.getElementById('bannerStatic');
+    const vid = document.getElementById('bannerVideo');
+    let _processing = false;
+    let _performing  = false;
+
+    function _update() {
+        const active = _processing || _performing;
+        img.style.display = active ? 'none' : '';
+        vid.style.display = active ? ''     : 'none';
+        if (active) {
+            vid.play().catch(() => {}); // catch autoplay policy rejections silently
+        } else {
+            vid.pause();
+        }
+    }
+
+    // Subscribe to MasterClock once it and the DOM are ready
+    document.addEventListener('DOMContentLoaded', () => {
+        MasterClock.onStart(() => { _performing = true;  _update(); });
+        MasterClock.onStop(()  => { _performing = false; _update(); });
+    });
+
+    return {
+        setProcessing(v) { _processing = v; _update(); },
+        setPerforming(v) { _performing = v; _update(); },
+    };
 })();

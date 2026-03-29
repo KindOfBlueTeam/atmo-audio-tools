@@ -12,13 +12,11 @@ const SYNTH_PRESETS = {
         name: 'Electrofunk Bass',
         osc1Wave: 'sawtooth', osc1Oct: 0,   osc1Fine: 0,   osc1Mix: 0.75,
         osc2Wave: 'sawtooth', osc2Oct: -1,  osc2Fine: -4,  osc2Mix: 0.55, osc2Detune: -4,
-        // vcfEnv low + vcfS near-zero: filter sweeps up on attack then decays back to cutoff,
-        // so the cutoff knob position is clearly audible as the resting tone.
         vcfCut: 1500, vcfRes: 0.55, vcfEnv: 0.35, vcfDrv: 0.18,
         vcfA: 0.005,  vcfD: 0.18,  vcfS: 0.04,   vcfR: 0.10,
         vcaA: 0.006,  vcaD: 0.12,  vcaS: 0.70,   vcaR: 0.08,
         lfoRate: 0.5, lfoDepth: 0, lfoDest: 'filter', lfoWave: 'sine',
-        glide: 0.04,  volume: 0.80,
+        glide: 0.04,  volume: 0.50,
     },
     subbass: {
         name: 'Sub Bass',
@@ -28,29 +26,27 @@ const SYNTH_PRESETS = {
         vcfA: 0.003,  vcfD: 0.25,  vcfS: 0.04,   vcfR: 0.12,
         vcaA: 0.005,  vcaD: 0.20,  vcaS: 0.80,   vcaR: 0.14,
         lfoRate: 0.5, lfoDepth: 0, lfoDest: 'filter', lfoWave: 'sine',
-        glide: 0.06,  volume: 0.90,
+        glide: 0.06,  volume: 0.55,
     },
     funkywah: {
         name: 'Funky Wah',
         osc1Wave: 'sawtooth', osc1Oct: 0,   osc1Fine: 0,   osc1Mix: 0.80,
         osc2Wave: 'square',   osc2Oct: 0,   osc2Fine: 7,   osc2Mix: 0.35, osc2Detune: 7,
-        // Higher vcfEnv for the wah sweep, but vcfS still low so filter returns to cutoff.
         vcfCut: 1200, vcfRes: 0.68, vcfEnv: 0.55, vcfDrv: 0.25,
         vcfA: 0.004,  vcfD: 0.22,  vcfS: 0.04,   vcfR: 0.10,
         vcaA: 0.005,  vcaD: 0.15,  vcaS: 0.65,   vcaR: 0.10,
         lfoRate: 3.5, lfoDepth: 0.28, lfoDest: 'filter', lfoWave: 'sine',
-        glide: 0.02,  volume: 0.78,
+        glide: 0.02,  volume: 0.48,
     },
     mooglead: {
         name: 'Moog Lead',
         osc1Wave: 'sawtooth', osc1Oct: 0,   osc1Fine: 0,   osc1Mix: 0.70,
         osc2Wave: 'sawtooth', osc2Oct: 0,   osc2Fine: 5,   osc2Mix: 0.65, osc2Detune: 5,
-        // Lead: some sustain so the filter "opens" and stays open while held.
         vcfCut: 2000, vcfRes: 0.48, vcfEnv: 0.42, vcfDrv: 0.14,
         vcfA: 0.010,  vcfD: 0.28,  vcfS: 0.22,   vcfR: 0.20,
         vcaA: 0.010,  vcaD: 0.20,  vcaS: 0.60,   vcaR: 0.25,
         lfoRate: 5.0, lfoDepth: 0.15, lfoDest: 'pitch', lfoWave: 'sine',
-        glide: 0.08,  volume: 0.75,
+        glide: 0.08,  volume: 0.46,
     },
 };
 
@@ -330,54 +326,125 @@ class MidiPlayer {
     constructor(synth, onNote, onEnd) {
         this.synth   = synth;
         this.onNote  = onNote;  // (midiNote, isOn) → void
-        this.onEnd   = onEnd;   // () → void  — called when playback finishes (not on loop restart)
+        this.onEnd   = onEnd;   // () → void
         this.loop    = false;
-        this._timers = [];
-        this._active = false;
-        this._events = null;
+
+        this._active   = false;
+        this._events   = null;
+        this._fileBpm  = 120;   // BPM embedded in the MIDI file
+        this._fireIdx  = 0;     // index of next note-on to fire
+        this._pendOffs = [];    // pending note-offs: { offBeat, note }
+        this._timer    = null;
+
+        // Beat-position tracking — robust to mid-playback BPM changes.
+        // Beat space is defined by the file BPM; we accumulate beats independently
+        // of MasterClock rate so changing BPM only affects future notes.
+        this._anchorAudio = 0;  // audioCtx time of last anchor point
+        this._anchorBeat  = 0;  // beat count at that anchor
+        this._curBpm      = 120;
+        this._unsubBPM    = null;
     }
 
     get isPlaying() { return this._active; }
 
-    play(events) {
+    // Beat position right now, accounting for all BPM changes since play started.
+    _beat() {
+        return this._anchorBeat +
+               (MasterClock.ctx.currentTime - this._anchorAudio) * (this._curBpm / 60);
+    }
+
+    // Audio time for a given absolute beat position.
+    _audioAt(beat) {
+        return this._anchorAudio + (beat - this._anchorBeat) * (60 / this._curBpm);
+    }
+
+    play(events, fileBpm) {
         if (this._active) return;
         if (!events || !events.length) return;
-        this._active = true;
-        this._events = events;
 
-        events.forEach(ev => {
-            const onMs  = ev.time * 1000;
-            const offMs = (ev.time + ev.duration) * 1000;
+        this._events      = events;
+        this._fileBpm     = fileBpm || MasterClock.bpm;
+        this._fireIdx     = 0;
+        this._pendOffs    = [];
+        this._active      = true;
+        this._curBpm      = MasterClock.bpm;
+        this._anchorAudio = MasterClock.ctx.currentTime;
+        this._anchorBeat  = 0;
 
-            this._timers.push(setTimeout(() => {
-                this.synth.noteOn(ev.note, ev.velocity);
-                this.onNote(ev.note, true);
-            }, onMs));
-
-            this._timers.push(setTimeout(() => {
-                this.synth.noteOff(ev.note);
-                this.onNote(ev.note, false);
-            }, offMs));
+        // Re-anchor on every BPM change so future note times use the new rate.
+        this._unsubBPM = MasterClock.onBPM(newBpm => {
+            if (!this._active) return;
+            this._anchorBeat  = this._beat();
+            this._anchorAudio = MasterClock.ctx.currentTime;
+            this._curBpm      = newBpm;
         });
 
-        const last  = events[events.length - 1];
-        const endMs = (last.time + last.duration + 0.15) * 1000;
-        this._timers.push(setTimeout(() => {
-            this._active = false;
-            this._timers = [];
-            if (this.loop && this._events) {
-                this.play(this._events);   // restart for loop
-            } else {
-                this.onEnd && this.onEnd();
+        this._poll();
+    }
+
+    _poll() {
+        if (!this._active) return;
+
+        const ctx      = MasterClock.ctx;
+        const now      = ctx.currentTime;
+        const curBeat  = this._beat();
+        const AHEAD    = 0.10;                              // look-ahead seconds
+        const fwdBeat  = curBeat + AHEAD * (this._curBpm / 60);
+        const bpfs     = this._fileBpm / 60;               // beats per file-second
+
+        // Fire pending note-offs that fall within the look-ahead window.
+        this._pendOffs = this._pendOffs.filter(off => {
+            if (off.offBeat > fwdBeat) return true;        // not yet
+            const t = Math.max(now, this._audioAt(off.offBeat));
+            this.synth.noteOff(off.note, 0, t);
+            this.onNote(off.note, false);
+            return false;
+        });
+
+        // Fire note-ons within the window.
+        while (this._fireIdx < this._events.length) {
+            const ev     = this._events[this._fireIdx];
+            const onBeat = ev.time * bpfs;
+            if (onBeat > fwdBeat) break;
+
+            // Only fire if not more than 50 ms in the past (skip stale notes on resume).
+            const t = this._audioAt(onBeat);
+            if (t > now - 0.05) {
+                this.synth.noteOn(ev.note, ev.velocity, Math.max(now, t));
+                this.onNote(ev.note, true);
             }
-        }, endMs));
+            this._pendOffs.push({ offBeat: (ev.time + ev.duration) * bpfs, note: ev.note });
+            this._fireIdx++;
+        }
+
+        // Schedule next poll, or detect end-of-song.
+        if (this._fireIdx < this._events.length || this._pendOffs.length > 0) {
+            this._timer = setTimeout(() => this._poll(), 25);
+        } else {
+            // All notes fired and all offs handled — wait a moment then wrap up.
+            this._timer = setTimeout(() => {
+                if (!this._active) return;
+                this._active = false;
+                this._cleanup();
+                if (this.loop && this._events) {
+                    this.play(this._events, this._fileBpm);
+                } else {
+                    this.onEnd && this.onEnd();
+                }
+            }, 200);
+        }
     }
 
     stop() {
-        this._timers.forEach(id => clearTimeout(id));
-        this._timers = [];
         this._active = false;
+        if (this._timer) { clearTimeout(this._timer); this._timer = null; }
+        this._cleanup();
+        this._pendOffs = [];
         this.synth.panic();
+    }
+
+    _cleanup() {
+        if (this._unsubBPM) { this._unsubBPM(); this._unsubBPM = null; }
     }
 }
 
@@ -573,10 +640,10 @@ class SynthUI {
         this._loadDemo('just_chill.mid');
     }
 
-    // Lazy AudioContext — created on first user gesture
+    // All Performance tools share the MasterClock AudioContext
     _getCtx() {
         if (!this._ctx) {
-            this._ctx    = new (window.AudioContext || window.webkitAudioContext)();
+            this._ctx    = MasterClock.ctx;
             this._synth  = new SubtractiveSynth(this._ctx);
             this._player = new MidiPlayer(
                 this._synth,
@@ -584,7 +651,6 @@ class SynthUI {
                 ()         => this._onPlaybackEnd(),
             );
         }
-        if (this._ctx.state === 'suspended') this._ctx.resume();
         return this._ctx;
     }
 
@@ -954,6 +1020,49 @@ class SynthUI {
         this._loopBtn.addEventListener('click', () => this._toggleLoop());
         parent.appendChild(this._loopBtn);
 
+        // BPM input + TAP — mirrors the drum machine header
+        const bpmGroup = document.createElement('div');
+        bpmGroup.className = 'synth-bpm-group';
+
+        const bpmLabel = document.createElement('label');
+        bpmLabel.className   = 'synth-bpm-label';
+        bpmLabel.textContent = 'BPM';
+
+        this._synthBpmInput = document.createElement('input');
+        this._synthBpmInput.type      = 'number';
+        this._synthBpmInput.className = 'synth-bpm-input';
+        this._synthBpmInput.value     = MasterClock.bpm;
+        this._synthBpmInput.min       = '20';
+        this._synthBpmInput.max       = '300';
+        this._synthBpmInput.addEventListener('change', () => {
+            const bpm = Math.max(20, Math.min(300, parseInt(this._synthBpmInput.value) || 120));
+            this._synthBpmInput.value = bpm;
+            MasterClock.setBPM(bpm, 'synth');
+        });
+
+        const tapBtn = document.createElement('button');
+        tapBtn.className   = 'btn synth-tap-btn';
+        tapBtn.textContent = 'TAP';
+        this._synthTapTimes = [];
+        tapBtn.addEventListener('click', () => {
+            const now = performance.now() / 1000;
+            this._synthTapTimes.push(now);
+            if (this._synthTapTimes.length > 4) this._synthTapTimes.shift();
+            if (this._synthTapTimes.length >= 2) {
+                const intervals = [];
+                for (let i = 1; i < this._synthTapTimes.length; i++) {
+                    intervals.push(this._synthTapTimes[i] - this._synthTapTimes[i - 1]);
+                }
+                const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+                const bpm = Math.max(20, Math.min(300, Math.round(60 / avg)));
+                this._synthBpmInput.value = bpm;
+                MasterClock.setBPM(bpm, 'synth');
+            }
+        });
+
+        bpmGroup.append(bpmLabel, this._synthBpmInput, tapBtn);
+        parent.appendChild(bpmGroup);
+
         // Tempo / info display
         this._tempoEl = document.createElement('span');
         this._tempoEl.className = 'synth-tempo';
@@ -961,6 +1070,16 @@ class SynthUI {
 
         // Close dropdown when clicking elsewhere
         document.addEventListener('click', () => this._closeDemosDropdown());
+
+        // Keep BPM input + tempo display in sync with the master clock
+        MasterClock.onBPM((bpm, src) => {
+            if (this._tempoEl && this._events) {
+                this._tempoEl.textContent = `${bpm} BPM · ${this._events.length} notes`;
+            }
+            if (src !== 'synth' && this._synthBpmInput) {
+                this._synthBpmInput.value = bpm;
+            }
+        });
     }
 
     _togglePlay() {
@@ -975,8 +1094,9 @@ class SynthUI {
                 return;
             }
             this._player.loop = this._loopActive;
-            this._player.play(this._events);
+            this._player.play(this._events, this._bpm || MasterClock.bpm);
             this._playBtn.textContent = 'Stop';
+            if (this._tempoEl) this._tempoEl.textContent = `${MasterClock.bpm} BPM · ${this._events.length} notes`;
         }
     }
 
@@ -1046,7 +1166,7 @@ class SynthUI {
             this._events = data.events;
             this._bpm    = data.bpm;
             this._midiNameEl.textContent = filename.replace(/\.midi?$/i, '');
-            this._tempoEl.textContent    = `${data.bpm} BPM · ${data.event_count} notes`;
+            this._tempoEl.textContent    = `${MasterClock.bpm} BPM · ${data.event_count} notes`;
         } catch (e) {
             this._midiNameEl.textContent = 'Error: ' + e.message;
         }
@@ -1067,7 +1187,7 @@ class SynthUI {
             this._events = data.events;
             this._bpm    = data.bpm;
             this._midiNameEl.textContent = file.name;
-            this._tempoEl.textContent    = `${data.bpm} BPM · ${data.event_count} notes`;
+            this._tempoEl.textContent    = `${MasterClock.bpm} BPM · ${data.event_count} notes`;
         } catch (e) {
             this._midiNameEl.textContent = 'Error: ' + e.message;
         }

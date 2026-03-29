@@ -63,11 +63,14 @@
 
                 <div class="nav-group nav-group-performance">
                     <div class="nav-group-label nav-group-label-performance">Performance</div>
-                    <button class="tab-btn performance" data-tab="synth">
-                        <span class="nav-label">Atmo Synth</span>
+                    <button class="tab-btn performance" data-tab="tempo">
+                        <span class="nav-label">Tap Tempo</span>
                     </button>
                     <button class="tab-btn performance" data-tab="drum">
                         <span class="nav-label">Drum Machine</span>
+                    </button>
+                    <button class="tab-btn performance" data-tab="synth">
+                        <span class="nav-label">Atmo Synth</span>
                     </button>
                 </div>
 
@@ -84,6 +87,14 @@
 
         </aside>
 
+        <!-- ══════════════════════════ BANNER ════════════════════════════ -->
+        <div class="page-banner" id="mainBanner">
+            <img id="bannerStatic" src="{{ url_for('static', filename='img/tools-banner-static.png') }}" alt="">
+            <video id="bannerVideo" loop muted playsinline style="display:none">
+                <source src="{{ url_for('static', filename='img/tools-banner-loop.mp4') }}" type="video/mp4">
+            </video>
+        </div>
+
         <!-- ══════════════════════════════ BMC ════════════════════════════ -->
         <a href="https://www.buymeacoffee.com/atmo.records" target="_blank" rel="noopener noreferrer" class="bmc-btn">
             <img src="{{ url_for('static', filename='img/bmc-button.svg') }}" alt="Tip Jar" style="height:60px;width:217px;">
@@ -95,12 +106,6 @@
             <!-- ══════════════════ GLOBAL LOADING BANNER ══════════════════════ -->
             <div id="globalLoadingBanner" style="display:none;">
                 <p id="globalLoadingText" class="global-loading-text"></p>
-                <div class="ripple-pond master-ripple-pond">
-                    <div class="ripple-ring"></div>
-                    <div class="ripple-ring"></div>
-                    <div class="ripple-ring"></div>
-                    <div class="ripple-ring"></div>
-                </div>
             </div>
 
             <!-- ══════════════════ MASTER LOG (fixed bottom) ═══════════════════ -->
@@ -109,9 +114,6 @@
             <!-- ═══════════════════════════ MIDI TAB ═══════════════════════════ -->
             <div id="midiTab" class="tab-content" style="display:none;">
 
-                <div class="page-banner">
-                    <img src="{{ url_for('static', filename='img/mixing-console.png') }}" alt="">
-                </div>
 
                 <div class="tool-intro">
                     <h2 class="tool-intro-heading">MIDI Analysis</h2>
@@ -259,9 +261,6 @@
             <!-- ══════════════════════════ AUDIO TAB ═══════════════════════════ -->
             <div id="audioTab" class="tab-content">
 
-                <div class="page-banner">
-                    <img src="{{ url_for('static', filename='img/mixing-console.png') }}" alt="">
-                </div>
 
                 <div class="tool-intro">
                     <h2 class="tool-intro-heading">Audio Analysis</h2>
@@ -463,9 +462,6 @@
             <!-- ═══════════════════════════ MASTER TAB ══════════════════════════ -->
             <div id="masterTab" class="tab-content" style="display:none;">
 
-                <div class="page-banner">
-                    <img src="{{ url_for('static', filename='img/mixing-console.png') }}" alt="">
-                </div>
 
                 <div class="tool-intro">
                     <h2 class="tool-intro-heading">Reference Mastering <span class="premium-badge">Premium</span></h2>
@@ -560,9 +556,6 @@
             <!-- ══════════════════════════ LOUDNESS TAB ════════════════════════ -->
             <div id="loudnessTab" class="tab-content" style="display:none;">
 
-                <div class="page-banner">
-                    <img src="{{ url_for('static', filename='img/mixing-console.png') }}" alt="">
-                </div>
 
                 <div class="tool-intro">
                     <h2 class="tool-intro-heading">Loudness Normalizer</h2>
@@ -640,9 +633,6 @@
             <!-- ══════════════════════════ SHEET TAB ═══════════════════════════ -->
             <div id="sheetTab" class="tab-content" style="display:none;">
 
-                <div class="page-banner">
-                    <img src="{{ url_for('static', filename='img/mixing-console.png') }}" alt="">
-                </div>
 
                 <div class="tool-intro">
                     <h2 class="tool-intro-heading">MIDI to Sheet Music</h2>
@@ -693,9 +683,6 @@
             <!-- ══════════════════════════ CONVERT TAB ════════════════════════ -->
             <div id="convertTab" class="tab-content" style="display:none;">
 
-                <div class="page-banner">
-                    <img src="{{ url_for('static', filename='img/mixing-console.png') }}" alt="">
-                </div>
 
                 <div class="tool-intro">
                     <h2 class="tool-intro-heading">WAV / MP3 Converter</h2>
@@ -752,9 +739,6 @@
             <!-- ══════════════════════ SPECTROGRAM TAB ════════════════════════ -->
             <div id="spectrogramTab" class="tab-content" style="display:none;">
 
-                <div class="page-banner">
-                    <img src="{{ url_for('static', filename='img/mixing-console.png') }}" alt="">
-                </div>
 
                 <div class="tool-intro">
                     <h2 class="tool-intro-heading">Spectral Analysis</h2>
@@ -809,9 +793,6 @@
             <!-- ══════════════════════════ STEMS TAB ═══════════════════════════ -->
             <div id="stemsTab" class="tab-content" style="display:none;">
 
-                <div class="page-banner">
-                    <img src="{{ url_for('static', filename='img/mixing-console.png') }}" alt="">
-                </div>
 
                 <div class="tool-intro">
                     <h2 class="tool-intro-heading">Stem Splitter <span class="premium-badge">Premium</span></h2>
@@ -854,9 +835,6 @@
             <!-- ══════════════════════════ SYNTH TAB ══════════════════════════ -->
             <div id="synthTab" class="tab-content" style="display:none;">
 
-                <div class="page-banner">
-                    <img src="{{ url_for('static', filename='img/mixing-console.png') }}" alt="">
-                </div>
 
                 <div class="tool-intro">
                     <h2 class="tool-intro-heading">Atmo Synth <span class="premium-badge">Premium</span></h2>
@@ -874,9 +852,6 @@
             <!-- ══════════════════════ TR-808 DRUM MACHINE ════════════════════ -->
             <div id="drumTab" class="tab-content" style="display:none;">
 
-                <div class="page-banner">
-                    <img src="{{ url_for('static', filename='img/mixing-console.png') }}" alt="">
-                </div>
 
                 <div class="tool-intro">
                     <h2 class="tool-intro-heading">Drum Machine <span class="premium-badge">Premium</span></h2>
@@ -890,6 +865,23 @@
                 <div id="drumEngine" class="drum-engine"></div>
 
             </div><!-- /drumTab -->
+
+            <!-- ══════════════════════ TAP TEMPO / METRONOME ══════════════════ -->
+            <div id="tempoTab" class="tab-content" style="display:none;">
+
+
+                <div class="tool-intro">
+                    <h2 class="tool-intro-heading">Tap Tempo &amp; Metronome</h2>
+                    <div class="tool-intro-body">
+                        <p>Find the BPM of any song by tapping along — click the circle, tap your keyboard's <strong>Space bar</strong>, or touch the screen on mobile. The tool averages your last eight taps for a stable reading, then locks in a steady beat so you can keep playing without looking down.</p>
+                        <p>Switch to <strong>Metronome</strong> mode to dial in an exact BPM and let the click track drive your practice. Beat 1 of every four pulses plays louder so you always feel the downbeat. Toggle the click sound on or off anytime — the visual ripple keeps the pulse even when silent.</p>
+                        <p class="tool-intro-analogy">Think of it as a conductor tapping a baton — except it learns your tempo and keeps it for you.</p>
+                    </div>
+                </div>
+
+                <div id="tempoEngine" class="tempo-engine"></div>
+
+            </div><!-- /tempoTab -->
 
         </main>
 
@@ -923,8 +915,10 @@
         </div>
     </div>
 
+    <script src="{{ url_for('static', filename='masterClock.js') }}"></script>
     <script src="{{ url_for('static', filename='synth.js') }}"></script>
     <script src="{{ url_for('static', filename='drum808.js') }}"></script>
+    <script src="{{ url_for('static', filename='tempo.js') }}"></script>
     <script src="{{ url_for('static', filename='app.js') }}"></script>
 </body>
 </html>

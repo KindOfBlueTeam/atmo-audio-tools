@@ -7,15 +7,11 @@ class Drum808 {
         this._ctx = null;
 
         // Sequencer state
-        this._bpm = 120;
         this._swing = 0;        // 0–1
         this._steps = 16;
-        this._currentStep = 0;
         this._isPlaying = false;
-        this._nextNoteTime = 0;
-        this._lookahead = 25;           // ms interval
-        this._scheduleAheadTime = 0.1;  // seconds ahead
-        this._timerID = null;
+        this._unsubTick = null;  // MasterClock.onTick unsubscribe handle
+        this._tapTimes  = [];    // timestamps for in-header tap tempo
 
         // Instruments: name, GM drum note, display colour
         this._instruments = [
@@ -48,10 +44,8 @@ class Drum808 {
     // ─── Audio context ────────────────────────────────────────────────────────
 
     _ensureCtx() {
-        if (!this._ctx) {
-            this._ctx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (this._ctx.state === 'suspended') this._ctx.resume();
+        // All Performance tools share the MasterClock AudioContext
+        this._ctx = MasterClock.ctx;
         return this._ctx;
     }
 
@@ -308,7 +302,7 @@ class Drum808 {
     // ─── Sequencer ────────────────────────────────────────────────────────────
 
     _stepDuration() {
-        return (60 / this._bpm) / 4; // 16th-note duration in seconds
+        return (60 / MasterClock.bpm) / 4; // 16th-note duration in seconds
     }
 
     _swingOffset(step) {
@@ -317,29 +311,8 @@ class Drum808 {
         return 0;
     }
 
-    _schedule() {
-        const ctx = this._ctx;
-        while (this._nextNoteTime < ctx.currentTime + this._scheduleAheadTime) {
-            const step = this._currentStep;
-            const time = this._nextNoteTime + this._swingOffset(step);
-
-            this._instruments.forEach(inst => {
-                const p = this._pattern[inst.id];
-                if (p.steps[step]) {
-                    this._triggerInstrument(inst.id, time, p.accents[step]);
-                }
-            });
-
-            this._scheduleVisualUpdate(step, time);
-
-            this._nextNoteTime += this._stepDuration();
-            this._currentStep = (this._currentStep + 1) % this._steps;
-        }
-        this._timerID = setTimeout(() => this._schedule(), this._lookahead);
-    }
-
     _scheduleVisualUpdate(step, time) {
-        const delay = Math.max(0, (time - this._ctx.currentTime) * 1000);
+        const delay = Math.max(0, (time - MasterClock.ctx.currentTime) * 1000);
         setTimeout(() => {
             if (!this._isPlaying) return;
             this._root.querySelectorAll('.drum-step.playing').forEach(el => el.classList.remove('playing'));
@@ -351,16 +324,27 @@ class Drum808 {
         if (this._isPlaying) return;
         this._ensureCtx();
         this._isPlaying = true;
-        this._currentStep = 0;
-        this._nextNoteTime = this._ctx.currentTime + 0.05;
-        this._schedule();
+
+        // Subscribe to MasterClock 16th-note ticks
+        this._unsubTick = MasterClock.onTick((tick, time) => {
+            const step      = tick % this._steps;
+            const swingTime = time + this._swingOffset(step);
+            this._instruments.forEach(inst => {
+                const p = this._pattern[inst.id];
+                if (p.steps[step]) this._triggerInstrument(inst.id, swingTime, p.accents[step]);
+            });
+            this._scheduleVisualUpdate(step, swingTime);
+        });
+
+        MasterClock.start();
         this._updatePlayBtn();
     }
 
     stop() {
         if (!this._isPlaying) return;
         this._isPlaying = false;
-        clearTimeout(this._timerID);
+        if (this._unsubTick) { this._unsubTick(); this._unsubTick = null; }
+        MasterClock.stop();
         this._root.querySelectorAll('.drum-step.playing').forEach(el => el.classList.remove('playing'));
         this._updatePlayBtn();
     }
@@ -428,7 +412,7 @@ class Drum808 {
 
     exportMIDI() {
         const PPQ  = 480;
-        const usec = Math.round(60_000_000 / this._bpm); // microseconds/beat
+        const usec = Math.round(60_000_000 / MasterClock.bpm); // microseconds/beat
         const ticksPerStep = PPQ / 4; // 16th note
         const BARS = 2;
 
@@ -479,7 +463,7 @@ class Drum808 {
         const url  = URL.createObjectURL(blob);
         const a    = document.createElement('a');
         a.href     = url;
-        a.download = `atmo-808-${this._bpm}bpm.mid`;
+        a.download = `atmo-808-${MasterClock.bpm}bpm.mid`;
         a.click();
         URL.revokeObjectURL(url);
     }
@@ -505,7 +489,8 @@ class Drum808 {
         header.innerHTML = `
             <div class="drum-ctrl-group">
                 <label class="drum-label">BPM</label>
-                <input type="number" class="drum-bpm-input" value="${this._bpm}" min="60" max="200">
+                <input type="number" class="drum-bpm-input" value="${MasterClock.bpm}" min="60" max="200">
+                <button class="drum-btn drum-tap-btn" title="Tap to set BPM">TAP</button>
             </div>
             <div class="drum-ctrl-group drum-swing-group">
                 <label class="drum-label">SWING</label>
@@ -594,9 +579,43 @@ class Drum808 {
     _wireEvents() {
         const r = this._root;
 
-        r.querySelector('.drum-bpm-input').addEventListener('change', e => {
-            this._bpm = Math.max(60, Math.min(200, parseInt(e.target.value) || 120));
-            e.target.value = this._bpm;
+        const bpmInput = r.querySelector('.drum-bpm-input');
+        bpmInput.addEventListener('change', e => {
+            const bpm = Math.max(60, Math.min(200, parseInt(e.target.value) || 120));
+            e.target.value = bpm;
+            MasterClock.setBPM(bpm, 'drum');
+        });
+
+        // Tap tempo button in drum header
+        r.querySelector('.drum-tap-btn').addEventListener('click', () => {
+            const now = performance.now() / 1000;
+            this._tapTimes.push(now);
+            if (this._tapTimes.length > 4) this._tapTimes.shift();
+            if (this._tapTimes.length >= 2) {
+                const intervals = [];
+                for (let i = 1; i < this._tapTimes.length; i++) {
+                    intervals.push(this._tapTimes[i] - this._tapTimes[i - 1]);
+                }
+                const avg = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+                const bpm = Math.max(60, Math.min(200, Math.round(60 / avg)));
+                bpmInput.value = bpm;   // update the display directly (src='drum' skips onBPM echo)
+                MasterClock.setBPM(bpm, 'drum');
+            }
+        });
+
+        // Keep BPM input in sync when another tool (Tap Tempo) changes the master BPM
+        MasterClock.onBPM((bpm, src) => {
+            if (src !== 'drum') bpmInput.value = bpm;
+        });
+
+        // If another tool stops the master clock, update our play button
+        MasterClock.onStop(() => {
+            if (this._isPlaying) {
+                this._isPlaying = false;
+                if (this._unsubTick) { this._unsubTick(); this._unsubTick = null; }
+                this._root.querySelectorAll('.drum-step.playing').forEach(el => el.classList.remove('playing'));
+                this._updatePlayBtn();
+            }
         });
 
         const swingSlider = r.querySelector('.drum-swing-slider');
