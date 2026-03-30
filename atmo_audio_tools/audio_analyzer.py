@@ -2307,10 +2307,19 @@ def _detect_sections(y: np.ndarray, sr: int, rms_norm: np.ndarray,
         })
 
     # ── 6. Label by position + relative energy ───────────────────────────
-    n_sec   = len(sections)
+    n_sec    = len(sections)
     energies = [s['_e'] for s in sections]
     e_min, e_max = min(energies), max(energies)
-    e_range = e_max - e_min or 1.0
+    e_range  = e_max - e_min or 1.0
+
+    # If the absolute energy spread across sections is small (< 15 points on
+    # the 0–100 scale) the track has uniform dynamics — jazz, classical,
+    # ambient, etc.  Forcing energy-based labels in this case produces
+    # nonsense (every section becomes "Drop" or "Chorus").  Use neutral
+    # positional labels instead.
+    low_variance  = (e_max - e_min) < 15
+    part_letters  = 'ABCDEFG'
+    mid_idx       = 0
 
     for i, s in enumerate(sections):
         norm_e = (s['_e'] - e_min) / e_range   # 0 = quietest, 1 = loudest
@@ -2318,16 +2327,17 @@ def _detect_sections(y: np.ndarray, sr: int, rms_norm: np.ndarray,
             label = 'Intro'
         elif i == n_sec - 1:
             label = 'Outro'
-        elif norm_e >= 0.82:
-            label = 'Drop'
-        elif norm_e >= 0.55:
+        elif low_variance:
+            label = f"Part {part_letters[mid_idx % len(part_letters)]}"
+            mid_idx += 1
+        elif norm_e >= 0.75:
             label = 'Chorus'
-        elif norm_e <= 0.25:
-            label = 'Verse'
-        elif norm_e <= 0.45:
-            label = 'Build'
-        else:
+        elif norm_e >= 0.50:
             label = 'Bridge'
+        elif norm_e <= 0.30:
+            label = 'Verse'
+        else:
+            label = 'Build'
         s['label'] = label
         del s['_e']
 
